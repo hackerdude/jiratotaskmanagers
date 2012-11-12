@@ -24,7 +24,7 @@ To set this up, do the following:
 You are set up! Now you can put it on a cron line, like this one which sets it to run at office
 hours (use `crontab -e` in Terminal for this):
 
-    0,10,20,30,40,50 7-18 * * * /yourdir/jiratoomnifocus > /yourdir/log/jira_to_omnifocus.log 2>&1
+    */10 7-18 * * * /yourdir/jiratoomnifocus > /yourdir/log/jira_to_omnifocus.log 2>&1
 
 Congratulations!  You are done.
 
