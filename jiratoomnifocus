@@ -271,8 +271,8 @@ report_results["issues"].each {|row|
       omnifocus_client.add_task({:task_name => task_name, :task_notes=>task_notes})
     end
   else
-      omnifocus_client.mark_done(jira_id)
     if JIRA_STATI_FOR_COMPLETED.include?(status)
+      omnifocus_client.mark_done(jira_id)
     else
       omnifocus_client.mark_undone(jira_id)
     end
