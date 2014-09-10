@@ -25,7 +25,7 @@ CRYPT_KEY="djkhsfoiu345jknrjvxy87345jlhk3bnmkvcxljhulhHENPJdT"
 # Change the filter id here. TODO Use by name and save it on the config.
 JIRA_FILTER_ID='10640'
 JIRA_TASK_RE=/(.*-[0-9]*):(.*)/
-JIRA_STATI_FOR_COMPLETED=["5","6"] # The status a completed JIRA project should have on your machine.
+JIRA_STATI_FOR_COMPLETED=["Resolved", "Rejected", "Closed"] # The status a completed JIRA project should have on your machine.
 
 require 'rubygems'
 require 'xmlrpc/client'
@@ -36,6 +36,8 @@ require 'crypt/cbc'
 require 'getopt/long' 
 require 'password'
 require 'yaml'
+require 'rest-client'
+require 'json'
 
 Debugger.start if defined? Debugger
 
@@ -235,23 +237,11 @@ end
 class JiraClient
     
   def initialize(jira_username, jira_password)
-    @jira_connection = XMLRPC::Client.new2(JIRA_URL)
-    @jira_server = @jira_connection.proxy("jira1")
-    @user_token = @jira_server.login(jira_username, jira_password)
+    @jira_connection = RestClient::Resource::new(JIRA_URL, jira_username, jira_password)
   end
 
   def run_report
-    # TODO: Run report by name instead by using these
-    # saved_filters = @jira_server.getSavedFilters(@user_token)
-    # report_id = nil
-    # saved_filters.each { |filter|
-    #   filter_name = filter['name']
-    #   filter_id   = filter['id']
-    # }
-    # if ! report_id
-    #   puts "Error: Report #{name} not found"
-    # end
-    report_results = @jira_server.getIssuesFromFilter(@user_token, JIRA_FILTER_ID)
+    report_results = @jira_connection["/search?jql=filter=#{JIRA_FILTER_ID}"].get
   end
 
 end
@@ -261,23 +251,27 @@ omnifocus_client = OmniFocusClient.new
 jira_client = JiraClient.new(password_store.username, password_store.password)
 # Only store the password when login went ok
 password_store.store_password unless ! password_store.store
-report_results = jira_client.run_report
+report_results_json = jira_client.run_report
+report_results = JSON.parse(report_results_json)
+
 if report_results.nil? 
   puts "No results from JIRA report"
 end
-report_results.each {|row|
+report_results["issues"].each {|row|
   jira_id = row['key']
-  title   = row['summary']
-  description = row['description']
+  status = row['fields']['status']['name']
+  title   = row['fields']['summary']
+  description = row['fields']['description']
   task_name = "#{jira_id}: #{title}"
   task_notes = "#{JIRA_BASE_URL}/browse/#{jira_id}\n#{description}"
+  
   if ! omnifocus_client.has_jira?(jira_id)
-    if ! JIRA_STATI_FOR_COMPLETED.include?(row['status'])
+    if ! JIRA_STATI_FOR_COMPLETED.include?(status)
       puts "Adding #{task_name}"
       omnifocus_client.add_task({:task_name => task_name, :task_notes=>task_notes})
     end
   else
-    if JIRA_STATI_FOR_COMPLETED.include?(row['status'])
+    if JIRA_STATI_FOR_COMPLETED.include?(status)
       omnifocus_client.mark_done(jira_id)
     else
       omnifocus_client.mark_undone(jira_id)
