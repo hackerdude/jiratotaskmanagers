@@ -1,3 +1,36 @@
+# JIRA To Task Managers
+
+## JIRA To Things
+
+Requires Yosemite because it uses JXA.
+
+You may need to use rvm to install a newer ruby. I use 2.1.5, and it's in the Gemfile.
+
+``
+$ bundle install
+$ ./jiratothings                                                                                           1 ↵
+JIRA Url: (enter your https Jira URL - OnDemand works fine)
+User name: (your jira user name)
+Password:
+Store password? (y/n) y
+assignee = currentUser() order by priority desc
+Storing password
+Storing on /Users/yourname/.jiratoomnifocus/jira_credentials.yml
+
+Running a bit of JXA AppleScript..
+Finished updating N tasks in Things.
+``
+
+You are set up! Now you can put it on a cron line, like this one which sets it to run at office
+hours (use `crontab -e` in Terminal for this):
+
+    */10 7-18 * * * /yourdir/jiratothings > /yourdir/log/jira_to_omnifocus.log 2>&1
+
+Congratulations!  You are done.
+
+
+## JIRA To Omnifocus
+
 The original blog post for this is [here](http://www.hackerdude.com/2009/03/04/jira-to-omnifocus-script/)
 
 __Please note that Ruby 1.8.7 is required!  At the present moment the rb-appscript gem does NOT work
