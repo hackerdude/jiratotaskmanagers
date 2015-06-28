@@ -87,7 +87,21 @@ As long as both your jiratoomnifocus script and your credentials file are secure
 owned by the user that will be running it on cron), you should be okay and secure (unless someone
 breaks into your account, in which case you have bigger problems than your JIRA access!).
 
-### License
+## How to add New Backends
+
+So you have Super-Duper app and you want to add a new one? With JXA, this is now fairly simple to do.
+
+1. Copy lib/add_to_things.jxa and edit it.
+
+	Start by changing TaskApp = Application("Things") to match the app you want to work with. Use Applescript editor and a sample JSON file, or just do #2 below and trial-and-error with your own app.
+1. Copy `jiratothings` to jirato(yourapp)
+1. change the `JXA_FILE` constant to point to your jxa file, and the `CONFIG_STORE_OPTIONS` to point to the config file you want to keep.
+
+You're done! Send me a pull request and I'll accept it.
+
+If your To-Do app needs more configuration (I'm thinking Omnifocus' contexts), the proper way to do it would be to add a new list of what to ask for on the `CONFIG_STORE_OPTIONS` and teach SimpleConfigStore to add these (optional) new items to the configuration. That way nothing is hardcoded.
+
+## License
     Copyright 2009, David Martinez
     
     Licensed under the Apache License, Version 2.0 (the "License");

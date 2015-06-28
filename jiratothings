@@ -13,6 +13,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+# Which backend to use (Things in this case)
 JXA_FILE = "add_to_things.jxa"
+
+CONFIG_STORE_OPTIONS = {
+  :config_store => "#{ENV['HOME']}/.jiratotaskmanagers/jira_to_things.yml"
+}
 require File.join(File.dirname(__FILE__), 'lib/jira_to_jxa_app')
 main if $0 == __FILE__

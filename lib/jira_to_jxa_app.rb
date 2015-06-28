@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 #   Copyright 2009, David Martinez <david@hackerdude.com>
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,15 +16,14 @@
 JIRA_TASK_RE=/(.*-[0-9]*):(.*)/
 JIRA_STATI_FOR_COMPLETED=["Resolved", "Closed"] # The status a completed JIRA project should have on your machine.
 
-
 require 'rubygems'
 require 'getopt/long'
 require 'yaml'
 require 'jira'
 require 'json'
-require File.join(File.dirname(__FILE__), 'simple_password_store')
+require File.join(File.dirname(__FILE__), 'simple_config_store')
 
-require 'byebug' ; Debugger.start if defined? Debugger
+# require 'byebug' ; Debugger.start if defined? Debugger
 
 def usage
   puts "Usage: jiratothings [--clear-login|-c]"
@@ -43,16 +41,17 @@ def main ()
   # If -C or --clear-login passed, clear login info from stored password file
   if opt["clear-login"]
     begin
-      File.unlink SimplePasswordStore::DEFAULT_PASSWORD_STORE
-      puts "Cleared login from #{SimplePasswordStore::DEFAULT_PASSWORD_STORE}"
+      File.unlink(CONFIG_STORE_OPTIONS[:config_store]) if File.exist?(CONFIG_STORE_OPTIONS[:config_store])
+      puts "Cleared login from #{CONFIG_STORE_OPTIONS[:config_store]}"
     rescue => e
-      puts "Clearing login info from #{SimplePasswordStore::DEFAULT_PASSWORD_STORE} FAILED:"
+      puts "Clearing login info from #{CONFIG_STORE_OPTIONS[:config_store]} FAILED:"
       raise
     end
   end
 
   # Connect to OmniFocus and Jira
-  password_store = SimplePasswordStore.new(consumer_key: true)
+  # TODO Different backends may have different options. Pass options from backend.
+  password_store = SimpleConfigStore.new(CONFIG_STORE_OPTIONS)
   jira_client = JIRA::Client.new({
                 :username => password_store.username,
                 :password => password_store.password,

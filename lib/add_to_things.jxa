@@ -1,4 +1,19 @@
 #!/usr/bin/env osascript -l JavaScript
+/*
+  Copyright 2009, David Martinez
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
 const VERBOSE=false
 
 function run(input, params) {
@@ -17,14 +32,14 @@ function run(input, params) {
 	if (VERBOSE) { console.log("Completed stati:"+completed_stati) }
 	var target_project = report_json['default_project']
 
-	var Things = Application("Things")
-	Things.includeStandardAdditions = true
+	var TaskApp = Application("Things")
+	TaskApp.includeStandardAdditions = true
 	if (VERBOSE) { 	console.log("Setting target project: "+target_project) }
-	var things_project = Things.projects.byName(target_project)
+	var things_project = TaskApp.projects.byName(target_project)
 	things_project.name() // To force an exception that we can see.
 	if (VERBOSE) { console.log("Setting target project: "+things_project.name()) }
 
-	var things_tasks = Things.toDos
+	var things_tasks = TaskApp.toDos
 
 	for (var i = report_json['results'].length - 1; i >= 0; i--) {
 		var row = report_json['results'][i]
@@ -43,9 +58,9 @@ function run(input, params) {
 			}
 		} catch (err) {
 			if (VERBOSE) { console.log("No task Found. "+err.message+". Adding it..") }
-			var toDo = Things.ToDo({name: task_name, notes: task_notes, project: things_project})
-			if (VERBOSE) { console.log("New Things ToDo:"+toDo) }
-			Things.toDos.push(toDo)
+			var toDo = TaskApp.ToDo({name: task_name, notes: task_notes, project: things_project})
+			if (VERBOSE) { console.log("New TaskApp ToDo:"+toDo) }
+			TaskApp.toDos.push(toDo)
 			// Not found, keep going.
 		}
 	}

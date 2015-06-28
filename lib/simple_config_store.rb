@@ -1,10 +1,10 @@
 require 'crypt/blowfish'
 require 'crypt/cbc'
 
-# A Simple Password Store
-class SimplePasswordStore
+# A Simple Encrypted config store
+class SimpleConfigStore
   STORE_FOLDER           ="#{ENV['HOME']}/.jiratotaskmanagers"
-  DEFAULT_PASSWORD_STORE ="#{STORE_FOLDER}/jira_credentials.yml"
+  DEFAULT_CONFIG_STORE    ="#{STORE_FOLDER}/jira_credentials.yml"
   # Change this key and run jiratothings -C to clear the login
   CRYPT_KEY              = ENV['JIRA_TO_TASKS_CRYPT_KEY'] || "djkhsfoiu345jknrjvxy87345jlhk3bnmkvcxljhulhHENPJdT"
 
@@ -17,9 +17,9 @@ class SimplePasswordStore
 
   def initialize(options)
     @options = options
-    @password_store = @options[:password_store] || DEFAULT_PASSWORD_STORE
+    @config_store = @options[:config_store] || DEFAULT_CONFIG_STORE
     @crypt = Crypt::Blowfish.new(CRYPT_KEY)
-    if (File.exists?@password_store)
+    if (File.exists?(@config_store))
       # Get the password from the credentials file
       read_password
     else
@@ -58,9 +58,10 @@ class SimplePasswordStore
 
   def store_password
     puts "Storing password " if @store
-    puts "Storing on #{@password_store}"
-    FileUtils.mkdir_p STORE_FOLDER
-    open("#{@password_store}", "w") do |f|
+    puts "Storing on #{@config_store}"
+    folder = File.dirname(@config_store)
+    FileUtils.mkdir_p folder
+    open("#{@config_store}", "w") do |f|
       # Block cypher with 8 char blocksize
       f.puts @crypt.encrypt_string(YAML::dump({ 
         :username => @username, :password =>@password,
@@ -72,7 +73,7 @@ class SimplePasswordStore
 
   def read_password
     @payload = nil
-    open("#{@password_store}", "r") do |f|
+    open("#{@config_store}", "r") do |f|
       crypted = f.read.chomp!
       @payload = YAML::load(@crypt.decrypt_string(crypted))
     end
