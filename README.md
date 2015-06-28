@@ -20,7 +20,7 @@ This I believe leads to tremendous life imbalances. Do I code now, or do I write
 
 JIRA To Task managers is a set of scripts that you can schedule on your Mac, which create one task for each of your assigned JIRA tasks. You can use cron to "set it and forget it", and get back to *One Inbox Bliss*.
 
-If you're a coder, and you use a different (scriptable) task manager on your Mac, I invite you to code a backend (see below). JXA can be fun!
+If you're a coder, and you use a different (scriptable) task manager on your Mac, I invite you to code a destination (see below). JXA can be fun!
 
 ## Setting Up
 
@@ -72,7 +72,7 @@ After this, every time you run it it looks like this:
 
 ### Can't get object on (JXA file)
 ``
-jiratotaskmanagers/lib/backends/add_to_omnifocus.jxa:1676:1700: execution error: Error on line 42: Error: Can't get object. (-1728)
+jiratotaskmanagers/lib/task_destinations/add_to_omnifocus.jxa:1676:1700: execution error: Error on line 42: Error: Can't get object. (-1728)
 ``
 
 This is nearly always a problem with your project or context not existing. Use the `--print-config` option to see the configuration and make sure your project names and contexts are correct. Go to the appropriate line (42 in this case) to see which variable is wrong for a hint.
@@ -117,11 +117,11 @@ As long as both your credentials file are secured as (chmod 700) and owned by th
 
 If this bothers you, you can set the environment variable `JIRA_TO_TASKS_CRYPT_KEY` to have the configuration store use a different key. You will need to run -C to clear the config that uses the old key.
 
-## How to add New Backends
+## How to add New Destinations
 
 So you have Super-Duper app and you want to add support for it? With JXA, this is now fairly simple to do. JXA is just like JavaScript, and you have our template here.
 
-1. Copy lib/backends/add_to_things.jxa and edit it.
+1. Copy `lib/task_destinations/add_to_things`.jxa and edit it.
 
 	Start by changing TaskApp = Application("Things") to match the app you want to work with. Use Applescript Editor (or Textmate with [AppleScript JXA Bundle](https://github.com/hackerdude/AppleScript-JXA.tmbundle)) and a sample JSON file, or just finish the rest of the changes and do trial-and-error with your own app.
 1. Copy `jira-to-things` to jira-to-(yourapp)

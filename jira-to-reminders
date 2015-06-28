@@ -15,7 +15,7 @@
 
 # Which backend to use (Things in this case)
 JXA_FILE = "add_to_reminders.jxa"
-require File.join(File.dirname(__FILE__), 'lib/task_sources/jira_to_jxa_app')
+require File.join(File.dirname(__FILE__), 'lib/task_sources/jira/jira_to_jxa_app')
 
 CONFIG_STORE_OPTIONS = {
   :config_store => "#{ENV['HOME']}/.jiratotaskmanagers/jira_to_reminders.yml",
