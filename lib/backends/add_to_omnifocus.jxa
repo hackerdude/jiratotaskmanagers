@@ -29,8 +29,8 @@ function run(input, params) {
 	if (VERBOSE) { console.log("Completed stati:"+completed_stati) }
   var app_params     = report_json['task_app_params']
 	var target_project = app_params['project_name']
-
-	var TaskApp = Application("Omnifocus")
+  var taskapp_name   = app_params['app_name']
+	var TaskApp = Application(taskapp_name)
 	TaskApp.includeStandardAdditions = true
   var omnifocus_doc = TaskApp.documents.first()
 	if (VERBOSE) { 	console.log("Setting target project: "+target_project) }
