@@ -16,6 +16,9 @@
 JIRA_TASK_RE=/(.*-[0-9]*):(.*)/
 JIRA_STATI_FOR_COMPLETED=["Resolved", "Rejected", "Closed"] # The status a completed JIRA project should have on your machine.
 
+# Ask for 100 items at a time (JIRA default is 50). It's not that much RAM.
+JIRA_MAX_RESULTS = 100
+
 require 'rubygems'
 require 'getoptlong'
 require 'yaml'
@@ -93,8 +96,17 @@ def main ()
   # Get issues from saved filter
   puts "Running JQL:"
   puts config_store.jira_query
-  report_results = jira_client.Issue.jql(config_store.jira_query)
 
+  report_results = []
+  this_page = jira_client.Issue.jql(config_store.jira_query, {:max_results=>JIRA_MAX_RESULTS})
+  page = 0
+  until this_page.length == 0 do
+    puts " - Pg: #{page+=1}"
+    report_results.concat(this_page)
+    this_page = jira_client.Issue.jql(config_store.jira_query, { :max_results=>JIRA_MAX_RESULTS, :start_at => report_results.length })
+  end
+
+  # puts "Got #{report_results.length} items"
   # Only store the password when login went ok
   config_store.store_config unless ! config_store.store
 
