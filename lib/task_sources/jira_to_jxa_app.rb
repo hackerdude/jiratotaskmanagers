@@ -24,7 +24,7 @@ require 'getoptlong'
 require 'yaml'
 require 'jira'
 require 'json'
-require File.join(File.dirname(__FILE__), 'config_store')
+require File.join(File.dirname(__FILE__), '../config_store')
 
 class JiraToJxaApp
 
@@ -165,7 +165,7 @@ class JiraToJxaApp
 
     begin
       puts "\nRunning #{JXA_FILE}"
-      things_jxa = File.join(File.dirname(__FILE__), 'backends', JXA_FILE)
+      things_jxa = File.join(File.dirname(__FILE__), 'task_destinations', JXA_FILE)
 
       output = `#{things_jxa} #{file.path}`
       output.split("\n").each do |line|
