@@ -14,26 +14,52 @@ JIRA To Task managers is a set of scripts that you can schedule on your Mac, whi
 
 ## Setting Up
 
+This shows the setup for [Things](https://culturedcode.com/things/). They all should (eventually) work very similar.
+
+The first time you run it, it looks like this:
+
+	(maybe RVM install or something..)
+	$ bundle install
+	(installs all your gems and goodies..)
+
+	$ ./jiratothings -C
+	Cleared login from /Users/yourname/.jiratotaskmanagers/jira_to_things.yml
+	JIRA Url (usually https://yourdomain.atlassian.net): 
+	    (you type your JIRA URI)
+	JIRA Query (leave blank to use assignee = currentUser() order by priority desc ): 
+	    (If you don't know JQL, blank should be fine)
+	Project Name on your Mac's To Do App: 
+	    (type the Project name in your Mac's TODO app)
+	User name: 
+	    (your JIRA user name.
+			Note: If you use OAuth, you still have a user name mapping,
+			it's in your profile view)
+	Password:
+	Store config? (y/n) y
+	Running JQL:
+	assignee = currentUser() order by priority desc
+	Storing password
+	Storing on /Users/yourname/.jiratotaskmanagers/jira_to_things.yml
+	Got 50 issues that we'll sync with your app
+
+After this, every time you run it it looks like this:
+
+	Running add_to_things.jxa
+	Finished updating 50 tasks in Things.
+	$ ./jiratothings
+	Running JQL:
+	assignee = currentUser() order by priority desc
+	Got 999 issues that we'll sync with your app
+
+	Running add_to_things.jxa
+	Finished updating 999 tasks in Things.
+
+
 ### JIRA To Things
 
 Requires Yosemite because it uses JXA.
 
 You may need to use rvm to install a newer ruby. I use 2.1.5, and it's in the Gemfile.
-
-``
-$ bundle install
-$ ./jiratothings                                                                                           1 ↵
-JIRA Url: (enter your https Jira URL - OnDemand works fine)
-User name: (your jira user name)
-Password:
-Store password? (y/n) y
-assignee = currentUser() order by priority desc
-Storing password
-Storing on /Users/yourname/.jiratoomnifocus/jira_credentials.yml
-
-Running a bit of JXA AppleScript..
-Finished updating N tasks in Things.
-``
 
 You are set up! Now you can put it on a cron line, like this one which sets it to run at office
 hours (use `crontab -e` in Terminal for this):
@@ -45,7 +71,7 @@ Congratulations!  You are done.
 
 ### JIRA To Omnifocus
 
-This is by far the older of the two projects, and requires some extra lovin'. It would be great if someone were to update this to be more like jiratothings (see "Adding a new script").
+This is by far the older of the two projects, and requires some extra lovin' to bring it up to speed with the new switchable backend stuff. It would be great if someone were to update this to be more like jiratothings (see "Adding a new script").
 
 
 The original blog post for this is [here](http://www.hackerdude.com/2009/03/04/jira-to-omnifocus-script/)
