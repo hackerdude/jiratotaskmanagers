@@ -29,6 +29,7 @@ function run(input, params) {
 	if (VERBOSE) { console.log("Completed stati:"+completed_stati) }
   var app_params     = report_json['task_app_params']
 	var target_project = app_params['project_name']
+  var tag_names      = app_params['tags']
 
 	var TaskApp = Application("Things")
 	TaskApp.includeStandardAdditions = true
@@ -50,13 +51,19 @@ function run(input, params) {
 		try {
 			var things_name = things_task.name()
 			if (VERBOSE) { console.log("Found task: and it's "+things_task.status()+". Setting status to "+task_status) }
+      things_task.tagNames = tag_names
 			if (completed_stati.indexOf(task_status)) {
 				if (VERBOSE) { console.log("Marking Done") }
 				things_task.status('completed')
 			}
 		} catch (err) {
 			if (VERBOSE) { console.log("No task Found. "+err.message+". Adding it..") }
-			var toDo = TaskApp.ToDo({name: task_name, notes: task_notes, project: things_project})
+			var toDo = TaskApp.ToDo({
+        name: task_name,
+        notes: task_notes,
+        project: things_project,
+        tagNames: tag_names
+      })
 			if (VERBOSE) { console.log("New TaskApp ToDo:"+toDo) }
 			TaskApp.toDos.push(toDo)
 			// Not found, keep going.

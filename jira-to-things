@@ -20,7 +20,8 @@ require File.join(File.dirname(__FILE__), 'lib/jira_to_jxa_app')
 CONFIG_STORE_OPTIONS = {
   :config_store => "#{ENV['HOME']}/.jiratotaskmanagers/jira_to_things.yml",
   :task_app_params => [
-    ConfigStore::Param.new("project_name", "Project Name:", "Work")
+    ConfigStore::Param.new("project_name", "Project Name:", "Work"),
+    ConfigStore::Param.new("tags", "Comma-separated Tags:", "jira")
   ]
 }
 JiraToJxaApp.new.main if $0 == __FILE__
