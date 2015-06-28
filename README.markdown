@@ -23,7 +23,7 @@ If you're a coder, and you use a different (scriptable) task manager on your Mac
 
 ## Setting Up
 
-This shows the setup for [Things](https://culturedcode.com/things/). They all work the same, just run the jirato(yourproject) instead.
+This shows the setup for [Things](https://culturedcode.com/things/). They all work the same, just run the jira-to-(yourapp) instead.
 
 Some projects may ask slightly different questions.
 
@@ -35,7 +35,7 @@ The first time you run it, it looks like this:
 	$ bundle install
 	(installs all your gems and goodies..)
 
-	$ ./jiratothings -C
+	$ ./jira-to-things -C
 	Cleared login from /Users/yourname/.jiratotaskmanagers/jira_to_things.yml
 	JIRA Url (usually https://yourdomain.atlassian.net):
 	    (you type your JIRA URI)
@@ -59,7 +59,7 @@ After this, every time you run it it looks like this:
 
 	Running add_to_things.jxa
 	Finished updating 50 tasks in Things.
-	$ ./jiratothings
+	$ ./jira-to-things
 	Running JQL:
 	assignee = currentUser() order by priority desc
 	Got 999 issues that we'll sync with your app
@@ -94,7 +94,7 @@ Note that if you have never signed in to JIRA using a password (for example, if 
 You are set up! Now you can put it on a cron line, like this one which sets it to run at office
 hours (use `crontab -e` in Terminal for this):
 
-    */10 7-18 * * * /yourdir/jiratothings > /yourdir/log/jira_to_omnifocus.log 2>&1
+    */10 7-18 * * * /yourdir/jira-to-things > /yourdir/log/jira_to_omnifocus.log 2>&1
 
 Congratulations!  You are done.
 
@@ -104,9 +104,7 @@ Congratulations!  You are done.
 The password for your JIRA account will be saved on a file on your computer called
 `~/.jiratoomnifocus/jira_credentials.yml`. It is encrypted using blowfish using a constant key.
 
-As long as both your jiratoomnifocus script and your credentials file are secured as (chmod 700 and
-owned by the user that will be running it on cron), you should be okay and secure (unless someone
-breaks into your account, in which case you have bigger problems than your JIRA access!).
+As long as both your credentials file are secured as (chmod 700) and owned by the user that will be running it on cron), you should be okay and secure (unless someone breaks into your account, in which case you have bigger problems than your JIRA access!).
 
 If this bothers you, you can set the environment variable `JIRA_TO_TASKS_CRYPT_KEY` to have the configuration store use a different key. You will need to run -C to clear the config that uses the old key.
 
@@ -117,7 +115,7 @@ So you have Super-Duper app and you want to add support for it? With JXA, this i
 1. Copy lib/add_to_things.jxa and edit it.
 
 	Start by changing TaskApp = Application("Things") to match the app you want to work with. Use Applescript Editor (or Textmate with [AppleScript JXA Bundle](https://github.com/hackerdude/AppleScript-JXA.tmbundle)) and a sample JSON file, or just finish the rest of the changes and do trial-and-error with your own app.
-1. Copy `jiratothings` to jirato(yourapp)
+1. Copy `jira-to-things` to jira-to-(yourapp)
 1. change the `JXA_FILE` constant to point to your jxa file, and the `CONFIG_STORE_OPTIONS` to point to the config file you want to keep.
 1. If you need extra configuration ("contexts, tags, oh my!"), add `ConfigStore::Param` entries to the `task_app_params` array (as you test, use -C to clear the config whenever you change it)
 
