@@ -54,8 +54,9 @@ To set this up, do the following:
   your Omnifocus. Delete a task and run it again to see it add it again without asking you for
   authentication.
 
-You are set up! Now you can put it on a cron line, like this one which sets it to run at office
-hours (use `crontab -e` in Terminal for this):
+# Scheduling your task
+
+Once you've run it once successfully, you can put it on a cron line, like this one which sets the jiratoomnifocus script to run at office hours (use `crontab -e` in Terminal for this):
 
     */10 7-18 * * * /yourdir/jiratoomnifocus > /yourdir/log/jira_to_omnifocus.log 2>&1
 
