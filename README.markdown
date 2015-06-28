@@ -8,9 +8,11 @@ If you are a fan of David Allen's [GTD](http://gettingthingsdone.com/ "Getting T
 
 However for collaboration with others, many techies use [Atlassian JIRA] (https://www.atlassian.com/software/jira "Atlassian JIRA Product page"). This ends up in a weird "two inboxes" problems, that forces us to schedule our coding life separate from our non-coding life (both work and play).
 
-This I believe leads to tremendous life imbalances. Do I code now, or do I write docs (which are not in JIRA). On my "What's Next", are my coding tasks included?
+This I believe leads to tremendous life imbalances. Do I code now, or do I write docs (which are not in JIRA)? On my "What's Next", are my coding tasks included?
 
 JIRA To Task managers is a set of scripts that you can schedule on your Mac, which create one task for each of your assigned JIRA tasks. You can use cron to "set it and forget it", and get back to *One Inbox Bliss*.
+
+If you're a coder, and you use a different (scriptable) task manager on your Mac, I invite you to code a backend (see below). JXA can be fun!
 
 ## Setting Up
 
