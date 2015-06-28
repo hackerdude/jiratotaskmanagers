@@ -26,13 +26,13 @@ The first time you run it, it looks like this:
 
 	$ ./jiratothings -C
 	Cleared login from /Users/yourname/.jiratotaskmanagers/jira_to_things.yml
-	JIRA Url (usually https://yourdomain.atlassian.net): 
+	JIRA Url (usually https://yourdomain.atlassian.net):
 	    (you type your JIRA URI)
-	JIRA Query (leave blank to use assignee = currentUser() order by priority desc ): 
+	JIRA Query (leave blank to use assignee = currentUser() order by priority desc ):
 	    (If you don't know JQL, blank should be fine)
-	Project Name on your Mac's To Do App: 
+	Project Name on your Mac's To Do App:
 	    (type the Project name in your Mac's TODO app)
-	User name: 
+	User name:
 	    (your JIRA user name.
 			Note: If you use OAuth, you still have a user name mapping,
 			it's in your profile view)
@@ -121,23 +121,24 @@ So you have Super-Duper app and you want to add a new one? With JXA, this is now
 
 1. Copy lib/add_to_things.jxa and edit it.
 
-	Start by changing TaskApp = Application("Things") to match the app you want to work with. Use Applescript editor and a sample JSON file, or just do #2 below and trial-and-error with your own app.
+	Start by changing TaskApp = Application("Things") to match the app you want to work with. Use Applescript Editor (or Textmate with [AppleScript JXA Bundle](https://github.com/hackerdude/AppleScript-JXA.tmbundle)) and a sample JSON file, or just finish the rest of the changes and do trial-and-error with your own app.
 1. Copy `jiratothings` to jirato(yourapp)
 1. change the `JXA_FILE` constant to point to your jxa file, and the `CONFIG_STORE_OPTIONS` to point to the config file you want to keep.
+1. If you need extra configuration ("contexts, tags, oh my!"), add `ConfigStore::Param` entries to the `task_app_params` array (as you test, use -C to clear the config whenever you change it)
 
-You're done! Send me a pull request and I'll accept it.
+Try it out and you're done! Send me a pull request and I'll accept it.
 
-If your To-Do app needs more configuration (I'm thinking Omnifocus' contexts), the proper way to do it would be to add a new list of what to ask for on the `CONFIG_STORE_OPTIONS` and teach SimpleConfigStore to add these (optional) new items to the configuration. That way nothing is hardcoded.
+If your To-Do app needs more configuration (I'm thinking Omnifocus' contexts), the proper way to do it would be to add a new list of what to ask for on the `CONFIG_STORE_OPTIONS` and teach ConfigStore to add these (optional) new items to the configuration. That way nothing is hardcoded.
 
 ## License
     Copyright 2009, David Martinez
-    
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-    
+
        http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.

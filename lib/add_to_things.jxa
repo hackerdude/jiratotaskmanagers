@@ -14,23 +14,21 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-const VERBOSE=false
+const VERBOSE = false
 
 function run(input, params) {
 	'use strict';
 
 	var strPath = input[0]
 	if (VERBOSE) { 	console.log("Path:"+strPath) }
-	if (! strPath) {
-		strPath = "/var/folders/_n/f5hy2pcd53v1jsm0ylh5s3y40000gn/T/jira-tasks20150627-30890-1fl331j"
-	}
 	var nsjira_report = $.NSString.stringWithContentsOfFile(strPath)
 	var jira_report = ObjC.unwrap(nsjira_report)
 	var report_json = JSON.parse(jira_report)
-	
+
 	var completed_stati = report_json['completed_stati']
 	if (VERBOSE) { console.log("Completed stati:"+completed_stati) }
-	var target_project = report_json['default_project']
+  var app_params     = report_json['task_app_params']
+	var target_project = app_params['project_name']
 
 	var TaskApp = Application("Things")
 	TaskApp.includeStandardAdditions = true
@@ -66,6 +64,6 @@ function run(input, params) {
 	}
 
 	console.log("Finished updating "+report_json['results'].length+" tasks in Things.")
-	
+
 }
 

@@ -21,53 +21,54 @@ require 'getopt/long'
 require 'yaml'
 require 'jira'
 require 'json'
-require File.join(File.dirname(__FILE__), 'simple_config_store')
+require File.join(File.dirname(__FILE__), 'config_store')
 
 # require 'byebug' ; Debugger.start if defined? Debugger
 
 def usage
-  puts "Usage: jiratothings [--clear-login|-c]"
+  puts "Usage: jiratothings [--clear-config|-c]"
 end
 
 def main ()
   # Parse command line arguments
   begin
-    opt = Getopt::Long.getopts ["--clear-login", "-C", Getopt::BOOLEAN]
+    opt = Getopt::Long.getopts ["--clear-config", "-C", Getopt::BOOLEAN]
   rescue
     usage()
     exit
   end
 
-  # If -C or --clear-login passed, clear login info from stored password file
-  if opt["clear-login"]
+  # If -C or --clear-config passed, clear login info from stored password file
+  if opt["clear-config"]
     begin
-      File.unlink(CONFIG_STORE_OPTIONS[:config_store]) if File.exist?(CONFIG_STORE_OPTIONS[:config_store])
-      puts "Cleared login from #{CONFIG_STORE_OPTIONS[:config_store]}"
+      config_store_filename = CONFIG_STORE_OPTIONS[:config_store]
+      File.unlink(config_store_filename) if File.exist?(config_store_filename)
+      puts "Cleared config from #{config_store_filename}"
     rescue => e
-      puts "Clearing login info from #{CONFIG_STORE_OPTIONS[:config_store]} FAILED:"
+      puts "Clearing config info from #{config_store_filename} FAILED:"
       raise
     end
   end
 
   # Connect to OmniFocus and Jira
   # TODO Different backends may have different options. Pass options from backend.
-  password_store = SimpleConfigStore.new(CONFIG_STORE_OPTIONS)
+  config_store = ConfigStore.new(CONFIG_STORE_OPTIONS)
   jira_client = JIRA::Client.new({
-                :username => password_store.username,
-                :password => password_store.password,
-                :site     => password_store.jira_url,
+                :username => config_store.username,
+                :password => config_store.password,
+                :site     => config_store.jira_url,
                 :context_path => '',
                 :auth_type => :basic
   })
 
   # Get issues from saved filter
   puts "Running JQL:"
-  puts password_store.jira_query
-  report_results = jira_client.Issue.jql(password_store.jira_query)
+  puts config_store.jira_query
+  report_results = jira_client.Issue.jql(config_store.jira_query)
 
   # Only store the password when login went ok
-  password_store.store_password unless ! password_store.store
-  
+  config_store.store_config unless ! config_store.store
+
   if report_results.nil? || report_results.length == 0
     puts "No results from JIRA report"
     exit
@@ -76,7 +77,7 @@ def main ()
   output = {
     :results=>[],
     :completed_stati => JIRA_STATI_FOR_COMPLETED,
-    :default_project => password_store.project_name
+    :task_app_params => config_store.task_app_params
   }
 
   # Iterate through resulting issues.
@@ -85,8 +86,8 @@ def main ()
     title   = row.summary
     description = row.description
     task_name = "#{jira_id}: #{title}"
-    task_notes = "#{password_store.jira_url}/browse/#{jira_id}\n#{description}"
-    
+    task_notes = "#{config_store.jira_url}/browse/#{jira_id}\n#{description}"
+
     priority = row.priority
     priority_value = priority.nil? ? 99 : priority.id.to_i
     flagged = priority_value <= 3 ? true : false
@@ -110,7 +111,7 @@ def main ()
   begin
     puts "\nRunning #{JXA_FILE}"
     things_jxa = File.join(File.dirname(__FILE__), JXA_FILE)
-    
+
     output = `#{things_jxa} #{file.path}`
     output.split("\n").each do |line|
       puts "[parent] output: #{line}"
@@ -118,8 +119,8 @@ def main ()
   rescue => e
     puts "Error - #{e.message}"
   end
-  
+
   file.unlink
-  
-  
+
+
 end
