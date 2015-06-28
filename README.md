@@ -113,7 +113,7 @@ If this bothers you, you can set the environment variable `JIRA_TO_TASKS_CRYPT_K
 
 So you have Super-Duper app and you want to add support for it? With JXA, this is now fairly simple to do. JXA is just like JavaScript, and you have our template here.
 
-1. Copy lib/add_to_things.jxa and edit it.
+1. Copy lib/backends/add_to_things.jxa and edit it.
 
 	Start by changing TaskApp = Application("Things") to match the app you want to work with. Use Applescript Editor (or Textmate with [AppleScript JXA Bundle](https://github.com/hackerdude/AppleScript-JXA.tmbundle)) and a sample JSON file, or just finish the rest of the changes and do trial-and-error with your own app.
 1. Copy `jira-to-things` to jira-to-(yourapp)
