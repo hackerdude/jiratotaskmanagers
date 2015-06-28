@@ -44,7 +44,7 @@ class ConfigStore
     $stdout.flush
     @jira_url=STDIN.gets.chomp!
 
-    print "JIRA Query (leave blank to use #{DEFAULT_JIRA_QUERY} ): "
+    print "JIRA Query ([Enter] for #{DEFAULT_JIRA_QUERY} ): "
     $stdout.flush
     @jira_query=STDIN.gets.chomp!
     if @jira_query == ''
@@ -64,7 +64,10 @@ class ConfigStore
     puts "\n\n** Task App Config"
 
     @options[:task_app_params].each do |param|
-      print "\n#{param.title} "
+      prompt = "\n#{param.title}"
+      prompt+= " ([Enter] for #{param.default})" unless param.default.nil? || param.default == ''
+
+      print "#{prompt}: "
       $stdout.flush
       @task_app_params[param.name]=STDIN.gets.chomp!
       if @task_app_params[param.name] == '' && ! param.default.nil?

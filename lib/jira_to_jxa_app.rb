@@ -17,7 +17,7 @@ JIRA_TASK_RE=/(.*-[0-9]*):(.*)/
 JIRA_STATI_FOR_COMPLETED=["Resolved", "Rejected", "Closed"] # The status a completed JIRA project should have on your machine.
 
 require 'rubygems'
-require 'getopt/long'
+require 'getoptlong'
 require 'yaml'
 require 'jira'
 require 'json'
@@ -26,32 +26,62 @@ require File.join(File.dirname(__FILE__), 'config_store')
 # require 'byebug' ; Debugger.start if defined? Debugger
 
 def usage
-  puts "Usage: jiratothings [--clear-config|-c]"
+  puts "Usage: #{$0} [--clear-config|-c] [--print-config|-p]"
+end
+
+def print_config
+  config_store = ConfigStore.new(CONFIG_STORE_OPTIONS)
+  puts <<-EOF
+** Current Config:
+
+JIRA:
+ Username: #{config_store.username}
+ Password: #{'*' * config_store.password.length }
+ JIRA Uri: #{config_store.jira_url}
+
+Task App:
+EOF
+  config_store.task_app_params.each do |param, value|
+    puts " #{param}: #{value}"
+  end
+  puts "\n"
 end
 
 def main ()
   # Parse command line arguments
   begin
-    opt = Getopt::Long.getopts ["--clear-config", "-C", Getopt::BOOLEAN]
-  rescue
+    opts = GetoptLong.new(
+      ["--clear-config", "-C", GetoptLong::OPTIONAL_ARGUMENT],
+      ["--print-config", "-p", GetoptLong::OPTIONAL_ARGUMENT],
+      ["--help", "-h", GetoptLong::OPTIONAL_ARGUMENT]
+    )
+  rescue => e
     usage()
     exit
   end
 
-  # If -C or --clear-config passed, clear login info from stored password file
-  if opt["clear-config"]
-    begin
-      config_store_filename = CONFIG_STORE_OPTIONS[:config_store]
-      File.unlink(config_store_filename) if File.exist?(config_store_filename)
-      puts "Cleared config from #{config_store_filename}"
-    rescue => e
-      puts "Clearing config info from #{config_store_filename} FAILED:"
-      raise
-    end
+  opts.each do |opt, arg|
+    case opt
+      when '--help'
+        usage
+        exit 2
+      when '--print-config'
+        print_config
+        exit 5
+      when '--clear-config'
+        begin
+          config_store_filename = CONFIG_STORE_OPTIONS[:config_store]
+          File.unlink(config_store_filename) if File.exist?(config_store_filename)
+          puts "Cleared config from #{config_store_filename}"
+        rescue => e
+          puts "Clearing config info from #{config_store_filename} FAILED:"
+          raise
+        end
+    end # case
   end
 
-  # Connect to JIRA
   config_store = ConfigStore.new(CONFIG_STORE_OPTIONS)
+  # Connect to JIRA
   jira_client = JIRA::Client.new({
                 :username => config_store.username,
                 :password => config_store.password,
