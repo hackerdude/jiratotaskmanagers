@@ -1,0 +1,81 @@
+#!/usr/bin/env osascript -l JavaScript
+/*
+  Copyright 2009, David Martinez
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+const VERBOSE = false
+
+function run(input, params) {
+	'use strict';
+
+	var strPath = input[0]
+	if (VERBOSE) { 	console.log("Path:"+strPath) }
+	var nsjira_report = $.NSString.stringWithContentsOfFile(strPath)
+	var jira_report = ObjC.unwrap(nsjira_report)
+	var report_json = JSON.parse(jira_report)
+
+	var completed_stati = report_json['completed_stati']
+	if (VERBOSE) { console.log("Completed stati:"+completed_stati) }
+  var app_params     = report_json['task_app_params']
+	var target_project = app_params['project_name']
+
+	var TaskApp = Application("Omnifocus")
+	TaskApp.includeStandardAdditions = true
+  var omnifocus_doc = TaskApp.documents.first()
+	if (VERBOSE) { 	console.log("Setting target project: "+target_project) }
+	var taskapp_project = omnifocus_doc.projects.byName(target_project)
+	taskapp_project.name() // To force an exception that we can see.
+
+	var target_context = app_params['context']
+  var taskapp_context = omnifocus_doc.contexts.byName(target_context)
+	if (VERBOSE) { 	console.log("Setting target context: "+target_context) }
+  taskapp_context.name()
+
+	if (VERBOSE) { console.log("Setting target project: "+taskapp_project.name()) }
+
+	var omnifocus_tasks = omnifocus_doc.tasks
+
+	for (var i = report_json['results'].length - 1; i >= 0; i--) {
+		var row = report_json['results'][i]
+		var task_name = row['task_name']
+		var task_notes = row['task_notes']
+		var task_status     = row['status']
+		var task_flags = row['task_flags']
+		if (VERBOSE) { console.log("Task: "+task_name) }
+		var omnifocus_task = taskapp_project.tasks.byName(task_name)
+		try {
+  		if (VERBOSE) { console.log("omnifocus_task: "+omnifocus_task) }
+			var things_name = omnifocus_task.name()
+			if (VERBOSE) { console.log("Found task: and it's completed?"+omnifocus_task.completed()+". Setting status to "+task_status) }
+			if (completed_stati.indexOf(task_status)) {
+				if (VERBOSE) { console.log("Marking Done") }
+				omnifocus_task.completed = true
+			}
+		} catch (err) {
+			if (VERBOSE) { console.log("No task Found. "+err.message+". Adding it to "+taskapp_project.name()+"@"+taskapp_context.name()) }
+			var toDo = TaskApp.Task({name: task_name, note: task_notes, context: taskapp_context})
+			if (VERBOSE) { console.log("New TaskApp ToDo:"+toDo) }
+      try {
+  			taskapp_project.tasks.push(toDo)
+      } catch(e) {
+        // TODO AppleEvent Handler failed on OF 1
+      }
+			// Not found, keep going.
+		}
+	}
+
+	console.log("Finished updating "+report_json['results'].length+" tasks in Things.")
+
+}
+

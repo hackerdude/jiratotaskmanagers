@@ -1,6 +1,13 @@
 # JIRA To Task Managers
 
-This is a project to have JIRA update project managers.
+This is a project to have JIRA update AppleScript-enabled Task apps like Omnifocus and Things.
+
+Requires Yosemite because it uses JXA.
+
+Supported Task Apps:
+
+- Omnifocus
+- Things
 
 ## Why?
 
@@ -16,7 +23,11 @@ If you're a coder, and you use a different (scriptable) task manager on your Mac
 
 ## Setting Up
 
-This shows the setup for [Things](https://culturedcode.com/things/). They all should (eventually) work very similar.
+This shows the setup for [Things](https://culturedcode.com/things/). They all work the same, just run the jirato(yourproject) instead.
+
+Some projects may ask slightly different questions.
+
+You may need to use rvm to install a newer ruby. I use 2.1.5, and it's what's specified in the Gemfile.
 
 The first time you run it, it looks like this:
 
@@ -57,11 +68,7 @@ After this, every time you run it it looks like this:
 	Finished updating 999 tasks in Things.
 
 
-### JIRA To Things
-
-Requires Yosemite because it uses JXA.
-
-You may need to use rvm to install a newer ruby. I use 2.1.5, and it's in the Gemfile.
+## Adding it to Cron
 
 You are set up! Now you can put it on a cron line, like this one which sets it to run at office
 hours (use `crontab -e` in Terminal for this):
@@ -71,19 +78,6 @@ hours (use `crontab -e` in Terminal for this):
 Congratulations!  You are done.
 
 
-### JIRA To Omnifocus
-
-This is by far the older of the two projects, and requires some extra lovin' to bring it up to speed with the new switchable backend stuff. It would be great if someone were to update this to be more like jiratothings (see "Adding a new script").
-
-
-The original blog post for this is [here](http://www.hackerdude.com/2009/03/04/jira-to-omnifocus-script/)
-
-__Please note that Ruby 1.8.7 is required!  At the present moment the rb-appscript gem does NOT work
-on Ruby 1.9.2.__
-
-This script logs into your JIRA and creates OmniFocus tasks for each of the JIRA items that are
-assigned to you, so they sync to your Omnifocus for iPhone, you only have to keep track of one
-inbox, etc. It only takes a tiny bit of setup.
 
 ###Installation
 To set this up, do the following:
@@ -103,7 +97,7 @@ To set this up, do the following:
 
 Once you've run it once successfully, you can put it on a cron line, like this one which sets the jiratoomnifocus script to run at office hours (use `crontab -e` in Terminal for this):
 
-    */10 7-18 * * * /yourdir/jiratoomnifocus > /yourdir/log/jira_to_omnifocus.log 2>&1
+    */10 7-18 * * * /yourdir/jirato(yourtaskapp) > /yourdir/log/jira_to_(yourtaskapp).log 2>&1
 
 Congratulations!  You are done.
 
@@ -117,7 +111,7 @@ breaks into your account, in which case you have bigger problems than your JIRA 
 
 ## How to add New Backends
 
-So you have Super-Duper app and you want to add a new one? With JXA, this is now fairly simple to do.
+So you have Super-Duper app and you want to add support for it? With JXA, this is now fairly simple to do. JXA is just like JavaScript, and you have our template here.
 
 1. Copy lib/add_to_things.jxa and edit it.
 
@@ -128,7 +122,6 @@ So you have Super-Duper app and you want to add a new one? With JXA, this is now
 
 Try it out and you're done! Send me a pull request and I'll accept it.
 
-If your To-Do app needs more configuration (I'm thinking Omnifocus' contexts), the proper way to do it would be to add a new list of what to ask for on the `CONFIG_STORE_OPTIONS` and teach ConfigStore to add these (optional) new items to the configuration. That way nothing is hardcoded.
 
 ## License
     Copyright 2009, David Martinez

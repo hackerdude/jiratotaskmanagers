@@ -1,0 +1,296 @@
+#!/usr/bin/ruby
+#   Copyright 2009, David Martinez
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+# Configure it here. Password will be requested by the terminal unless you specify it
+JIRA_BASE_URL="https://milestone.tacitknowledge.com/jira"
+JIRA_URL="#{JIRA_BASE_URL}/rpc/xmlrpc"
+HACKERDUDE_TOOLS_DIR="#{ENV['HOME']}/.jiratoomnifocus"
+DEFAULT_PASSWORD_STORE="#{HACKERDUDE_TOOLS_DIR}/jira_credentials.yml"
+DEFAULT_CONTEXT=nil
+DEFAULT_PROJECT=nil
+# Change this key and run jiratoomnifocus -C to clear the login
+CRYPT_KEY="djkhsfoiu345jknrjvxy87345jlhk3bnmkvcxljhulhHENPJdT"
+# Change the filter id here. TODO Use by name and save it on the config.
+JIRA_FILTER_ID='10640'
+JIRA_TASK_RE=/(.*-[0-9]*):(.*)/
+JIRA_STATI_FOR_COMPLETED=["Resolved", "Rejected", "Closed"] # The status a completed JIRA project should have on your machine.
+
+require 'rubygems'
+require 'xmlrpc/client'
+require 'appscript'
+require 'crypt/blowfish'
+require 'crypt/cbc'
+#require 'ruby-debug'
+require 'getopt/long'
+require 'password'
+require 'yaml'
+require 'rest-client'
+require 'json'
+
+Debugger.start if defined? Debugger
+
+def usage
+  puts "Usage: jiratoomnifocus.rb [--clear-login|-c]"
+end
+
+class SimplePasswordStore
+  attr_reader :username, :password, :store
+
+  def initialize
+    @crypt = Crypt::Blowfish.new(CRYPT_KEY)
+    if (File.exists?DEFAULT_PASSWORD_STORE)
+      # Get the password from the credentials file
+      read_password
+    else
+      read_from_stdin
+    end
+  end
+
+  def read_from_stdin
+    print "User name: "
+    $stdout.flush
+    @username=STDIN.gets.chomp!
+    print "Password: "
+    $stdout.flush
+    system "stty -echo"
+    @password=STDIN.gets.chomp!
+    system "stty echo"
+    print "\nStore password? (y/n) "
+    @store = STDIN.gets.chomp! == "y"
+  end
+
+  def store_password
+    puts "Storing password " if @store
+    puts "Storing on #{DEFAULT_PASSWORD_STORE}"
+    FileUtils.mkdir_p HACKERDUDE_TOOLS_DIR
+    open("#{DEFAULT_PASSWORD_STORE}", "w") do |f|
+      # Block cypher with 8 char blocksize
+      f.puts @crypt.encrypt_string(YAML::dump({ :username => username, :password =>password }))
+    end
+  end
+
+  def read_password
+    @payload = nil
+    open("#{DEFAULT_PASSWORD_STORE}", "r") do |f|
+      crypted = f.read.chomp!
+      @payload = YAML::load(@crypt.decrypt_string(crypted))
+    end
+    @username = @payload[:username].chomp
+    @password = @payload[:password].chomp
+    @store = false
+  end
+end
+
+# A little omnifocus client
+class OmniFocusClient
+
+  attr_reader :app, :doc
+
+  def initialize
+    @app = Appscript.app(ENV["FOCUS_PATH"] || "OmniFocus")
+    @doc = @app.default_document.get
+    collate_tasks
+  end
+
+
+  def collate_tasks
+    @tasks_by_jira = {}
+    @tasks_by_name = {}
+    @task_objects_by_jira = {}
+    # Get all the tasks, in inbox and all the contexts.
+    tasks = tasks_for_document
+    tasks.each {|task|
+      of_task = task.get
+      task_id, task_name = tasks_and_id(of_task)
+      @tasks_by_jira[task_id] = task_name unless task_id.nil?
+      @tasks_by_name[task.name.get] = task
+      @task_objects_by_jira[task_id] = of_task unless task_id.nil?
+    }
+  end
+
+  def tasks_for_document
+    tasks = []
+    @doc.inbox_tasks.get.each{ |inbox_task|
+      tasks.concat(tasks_for_task(inbox_task.get))
+    }
+    @doc.projects.get.each {|p| tasks.concat tasks_for_project(p.get) } unless @doc.projects.get == :missing_value
+    @doc.folders.get.each {|f| tasks.concat tasks_for_folder(f.get) } unless @doc.folders.get == :missing_value
+    @doc.contexts.get.each { |c| tasks.concat tasks_for_context(c.get) } unless @doc.contexts.get == :missing_value
+    tasks
+  end
+
+  def of_task_object(jira_id)
+    tasks = tasks_for_document
+    tasks.each {|task|
+      of_task = task.get
+      task_id, task_name = tasks_and_id(of_task)
+      if task_id == jira_id
+        return of_task
+      end
+    }
+    nil
+  end
+
+  def mark_done(jira_id)
+    of_task = @task_objects_by_jira[jira_id]
+    of_task.completed.set(true) unless of_task.nil? || of_task.completed.get == true
+  end
+
+  def mark_undone(jira_id)
+    of_task = @task_objects_by_jira[jira_id]
+    of_task.completed.set(false) unless of_task.nil? || of_task.completed.get == false
+  end
+
+  def tasks_for_project(project)
+    tasks = []
+    project.tasks.get.each { |t| tasks.concat tasks_for_task(t.get) } unless project.tasks.get == :missing_value
+    tasks
+  end
+
+  def tasks_for_folder(folder)
+    tasks = []
+    folder.projects.get.each {|p| tasks.concat tasks_for_project(p.get) } unless folder.projects.get == :missing_value
+    folder.folders.get.each {|f| tasks.concat tasks_for_folder(f.get) } unless folder.folders.get == :missing_value
+    tasks
+  end
+
+  def tasks_for_context(context)
+    tasks = []
+    context.tasks.get.each { |t| tasks.concat tasks_for_task(t.get) } unless context.tasks.get == :missing_value
+    context.contexts.get.each { |c| tasks.concat tasks_for_context(c.get) } unless context.contexts.get == :missing_value
+    tasks
+  end
+
+  def tasks_for_task(task)
+    tasks = []
+    task.tasks.get.each { |t| tasks.concat tasks_for_task(t.get) } unless task.tasks.get == :missing_value
+    tasks << task unless tasks.include?(task)
+    tasks
+  end
+
+  # Returns the id, task for a task
+  def tasks_and_id(task)
+    task_name = task.name.get
+    match = task_name.match(JIRA_TASK_RE)
+    if match
+      return match[1],match[2]
+    end
+    return nil,nil
+  end
+
+  # Ask omnifocus whether it has a task named as specified
+  def has_task?(task_name)
+    return @tasks_by_name.has_key?(task_name)
+  end
+
+  def has_jira?(jira_id)
+    return @tasks_by_jira.has_key?(jira_id)
+  end
+
+  def task_by_jira(jira_id)
+    return @tasks_by_jira[jira_id]
+  end
+
+  def get_default_context
+    @doc.contexts.get.select { |context| context.name.get == DEFAULT_CONTEXT }.first
+  end
+
+  # Add a task to omnifocus
+  def add_task(task, parent_task = nil)
+    properties = {
+      :name => task[:task_name],
+      :note => task[:task_notes],
+      :flagged => task[:task_flagged],
+    }
+    properties[:context] = get_default_context unless DEFAULT_CONTEXT.nil?
+    @doc.make(:new=> :inbox_task, :at=>@doc.inbox_tasks.end, :with_properties => properties)
+  end
+end
+
+class JiraClient
+  def initialize(jira_username, jira_password)
+    @jira_connection = RestClient::Resource::new(JIRA_URL, jira_username, jira_password)
+  end
+
+  def run_report
+    report_results = @jira_connection["/search?jql=filter=#{JIRA_FILTER_ID}"].get
+  end
+end
+
+
+def main ()
+  # Parse command line arguments
+  begin
+    opt = Getopt::Long.getopts ["--clear-login", "-C", Getopt::BOOLEAN]
+  rescue
+    usage()
+    exit
+  end
+
+  # If -C or --clear-login passed, clear login info from stored password file
+  if opt["clear-login"]
+    begin
+      File.unlink DEFAULT_PASSWORD_STORE
+      puts "Cleared login from #{DEFAULT_PASSWORD_STORE}"
+    rescue
+      puts "Clearing login info from #{DEFAULT_PASSWORD_STORE} FAILED:"
+      raise
+    end
+  end
+
+  # Connect to OmniFocus and Jira
+  password_store = SimplePasswordStore.new
+  omnifocus_client = OmniFocusClient.new
+  jira_client = JiraClient.new(password_store.username, password_store.password)
+  # Only store the password when login went ok
+  password_store.store_password unless ! password_store.store
+
+  # Get issues from saved filter
+  report_results = jira_client.run_report
+  if report_results.nil?
+    puts "No results from JIRA report"
+    exit
+  end
+
+  # Iterate through resulting issues.
+  report_results.each do |row|
+    jira_id = row['key']
+    title   = row['summary']
+    description = row['description']
+    task_name = "#{jira_id}: #{title}"
+    task_notes = "#{JIRA_BASE_URL}/browse/#{jira_id}\n#{description}"
+    if ! omnifocus_client.has_jira?(jira_id)
+      # Issue doesn't exist in OmniFocus.  let's add it.
+      if ! JIRA_STATI_FOR_COMPLETED.include?(row['status'])
+        puts "Adding #{task_name}"
+        properties = {
+          :task_name => task_name,
+          :task_notes => task_notes,
+          :task_flagged => (row['priority'].to_i <= 3 ? true : false)
+        }
+        omnifocus_client.add_task(properties)
+      end
+    else
+      # Issue does exist.  Should we mark it complete?
+      if JIRA_STATI_FOR_COMPLETED.include?(row['status'])
+        omnifocus_client.mark_done(jira_id)
+      else
+        omnifocus_client.mark_undone(jira_id)
+      end
+    end
+  end
+end
+
+main if $0 == __FILE__
