@@ -4,10 +4,11 @@ This is a project to have JIRA update AppleScript-enabled Task apps like Omnifoc
 
 Requires Yosemite because it uses JXA.
 
-Supported Task Apps:
+Currently supported Task Apps:
 
 - Omnifocus
 - Things
+- Apple's Reminders
 
 ## Why?
 
