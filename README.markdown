@@ -67,6 +67,27 @@ After this, every time you run it it looks like this:
 	Running add_to_things.jxa
 	Finished updating 999 tasks in Things.
 
+## Troubleshooting
+
+### Can't get object on (JXA file)
+``
+jiratotaskmanagers/lib/backends/add_to_omnifocus.jxa:1676:1700: execution error: Error on line 42: Error: Can't get object. (-1728)
+``
+
+This is nearly always a problem with your project or context not existing. Use the `--print-config` option to see the configuration and make sure your project names and contexts are correct. Go to the appropriate line (42 in this case) to see which variable is wrong for a hint.
+
+Once you've determined what was wrong, `--clear-config` option to reconfigure, and answer the questions correctly.
+
+### JIRA::HTTPError Unauthorized
+
+``
+/Users/David/.rvm/gems/ruby-2.1.5/gems/jira-ruby-0.1.14/lib/jira/request_client.rb:14:in `request': Unauthorized (JIRA::HTTPError)
+``
+
+This is a JIRA authentication error. We use JIRA basic auth. Clear your config and log in correctly.
+
+Note that if you have never signed in to JIRA using a password (for example, if you use Google Apps login), you need to go to your profile, look at the username and click on "Set Password" to set an initial password. Make sure you can log in to JIRA directly.
+
 
 ## Adding it to Cron
 
