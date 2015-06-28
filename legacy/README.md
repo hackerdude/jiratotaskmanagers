@@ -1,5 +1,7 @@
 # JIRA To Omnifocus (Legacy)
 
+This version is deprecated, but it's left for people with older Macs who may still need it. Please use the Ruby 2, Yosemite ready jira-to-* projects in the parent directory if possible. Thanks!
+
 The original blog post for this is [here](http://www.hackerdude.com/2009/03/04/jira-to-omnifocus-script/)
 
 __Please note that Ruby 1.8.7 is required!  At the present moment the rb-appscript gem does NOT work
