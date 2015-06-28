@@ -25,4 +25,4 @@ CONFIG_STORE_OPTIONS = {
     ConfigStore::Param.new("context", "Context:", "Office")
   ]
 }
-main if $0 == __FILE__
+JiraToJxaApp.new.main if $0 == __FILE__

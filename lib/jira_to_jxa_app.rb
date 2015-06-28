@@ -26,142 +26,156 @@ require 'jira'
 require 'json'
 require File.join(File.dirname(__FILE__), 'config_store')
 
-# require 'byebug' ; Debugger.start if defined? Debugger
+class JiraToJxaApp
 
-def usage
-  puts "Usage: #{$0} [--clear-config|-c] [--print-config|-p]"
-end
-
-def print_config
-  config_store = ConfigStore.new(CONFIG_STORE_OPTIONS)
-  puts <<-EOF
-** Current Config:
-
-JIRA:
- Username: #{config_store.username}
- Password: #{'*' * config_store.password.length }
- JIRA Uri: #{config_store.jira_url}
-
-Task App:
-EOF
-  config_store.task_app_params.each do |param, value|
-    puts " #{param}: #{value}"
-  end
-  puts "\n"
-end
-
-def main ()
-  # Parse command line arguments
-  begin
-    opts = GetoptLong.new(
-      ["--clear-config", "-C", GetoptLong::OPTIONAL_ARGUMENT],
-      ["--print-config", "-p", GetoptLong::OPTIONAL_ARGUMENT],
-      ["--help", "-h", GetoptLong::OPTIONAL_ARGUMENT]
-    )
-  rescue => e
-    usage()
-    exit
+  def initialize
+    @config_filename = CONFIG_STORE_OPTIONS[:config_store]
   end
 
-  opts.each do |opt, arg|
-    case opt
-      when '--help'
-        usage
-        exit 2
-      when '--print-config'
-        print_config
-        exit 5
-      when '--clear-config'
-        begin
-          config_store_filename = CONFIG_STORE_OPTIONS[:config_store]
-          File.unlink(config_store_filename) if File.exist?(config_store_filename)
-          puts "Cleared config from #{config_store_filename}"
-        rescue => e
-          puts "Clearing config info from #{config_store_filename} FAILED:"
-          raise
-        end
-    end # case
+  def usage
+    puts "Usage: #{$0} [--clear-config|-c] [--print-config|-p] [--config-file|-f]"
   end
 
-  config_store = ConfigStore.new(CONFIG_STORE_OPTIONS)
-  # Connect to JIRA
-  jira_client = JIRA::Client.new({
-                :username => config_store.username,
-                :password => config_store.password,
-                :site     => config_store.jira_url,
-                :context_path => '',
-                :auth_type => :basic
-  })
+  def print_config
+    config_store = ConfigStore.new(CONFIG_STORE_OPTIONS)
+    puts <<-EOF
+  ** Current Config:
 
-  # Get issues from saved filter
-  puts "Running JQL:"
-  puts config_store.jira_query
+  JIRA:
+   Username: #{config_store.username}
+   Password: #{'*' * config_store.password.length }
+   JIRA Uri: #{config_store.jira_url}
 
-  report_results = []
-  this_page = jira_client.Issue.jql(config_store.jira_query, {:max_results=>JIRA_MAX_RESULTS})
-  page = 0
-  until this_page.length == 0 do
-    puts " - Pg: #{page+=1}"
-    report_results.concat(this_page)
-    this_page = jira_client.Issue.jql(config_store.jira_query, { :max_results=>JIRA_MAX_RESULTS, :start_at => report_results.length })
+  Task App:
+  EOF
+    config_store.task_app_params.each do |param, value|
+      puts " #{param}: #{value}"
+    end
+    puts "\n"
   end
 
-  # puts "Got #{report_results.length} items"
-  # Only store the password when login went ok
-  config_store.store_config unless ! config_store.store
+  def opt_parse
+    @config_filename = CONFIG_STORE_OPTIONS[:config_store]
+    # Parse command line arguments
+    begin
+      opts = GetoptLong.new(
+        ["--clear-config", "-C", GetoptLong::OPTIONAL_ARGUMENT],
+        ["--print-config", "-p", GetoptLong::OPTIONAL_ARGUMENT],
+        ["--help",         "-h", GetoptLong::OPTIONAL_ARGUMENT],
+        ["--config-file",  "-f", GetoptLong::OPTIONAL_ARGUMENT]
+      )
+    rescue => e
+      usage()
+      exit
+    end
 
-  if report_results.nil? || report_results.length == 0
-    puts "No results from JIRA report"
-    exit
+    opts.each do |opt, arg|
+      case opt
+        when '--help'
+          usage
+          exit 2
+        when '--config-file'
+          @config_filename = arg
+        when '--print-config'
+          print_config
+          exit 5
+        when '--clear-config'
+          begin
+            File.unlink(@config_filename) if File.exist?(@config_filename)
+            puts "Cleared config from #{@config_filename}"
+          rescue => e
+            puts "Clearing config info from #{@config_filename} FAILED:"
+            raise
+          end
+      end # case
+    end
   end
 
-  output = {
-    :results=>[],
-    :completed_stati => JIRA_STATI_FOR_COMPLETED,
-    :task_app_params => config_store.task_app_params
-  }
+  def main
+    opt_parse
+    if ! @config_filename.blank?
+      puts "Config: #{@config_filename}"
+      CONFIG_STORE_OPTIONS[:config_store] = @config_filename
+    end
+    config_store = ConfigStore.new(CONFIG_STORE_OPTIONS)
+    # Connect to JIRA
+    jira_client = JIRA::Client.new({
+                  :username => config_store.username,
+                  :password => config_store.password,
+                  :site     => config_store.jira_url,
+                  :context_path => '',
+                  :auth_type => :basic
+    })
 
-  # Iterate through resulting issues.
-  report_results.each do |row|
-    jira_id = row.key
-    title   = row.summary
-    description = row.description
-    task_name = "#{jira_id}: #{title}"
-    task_notes = "#{config_store.jira_url}/browse/#{jira_id}\n#{description}"
+    # Get issues from saved filter
+    puts "Running JQL:"
+    puts config_store.jira_query
 
-    priority = row.priority
-    priority_value = priority.nil? ? 99 : priority.id.to_i
-    flagged = priority_value <= 3 ? true : false
-    status = row.status.name
-    output[:results] << {
-      :task_name =>  task_name,
-      :task_notes => task_notes,
-      :status =>     status,
-      :task_flagged => flagged
+    report_results = []
+    this_page = jira_client.Issue.jql(config_store.jira_query, {:max_results=>JIRA_MAX_RESULTS})
+    page = 0
+    until this_page.length == 0 do
+      puts " - Pg: #{page+=1}"
+      report_results.concat(this_page)
+      this_page = jira_client.Issue.jql(config_store.jira_query, { :max_results=>JIRA_MAX_RESULTS, :start_at => report_results.length })
+    end
+
+    # puts "Got #{report_results.length} items"
+    # Only store the password when login went ok
+    config_store.store_config unless ! config_store.store
+
+    if report_results.nil? || report_results.length == 0
+      puts "No results from JIRA report"
+      exit
+    end
+
+    output = {
+      :results=>[],
+      :completed_stati => JIRA_STATI_FOR_COMPLETED,
+      :task_app_params => config_store.task_app_params
     }
 
-  end # report_results.each
+    # Iterate through resulting issues.
+    report_results.each do |row|
+      jira_id = row.key
+      title   = row.summary
+      description = row.description
+      task_name = "#{jira_id}: #{title}"
+      task_notes = "#{config_store.jira_url}/browse/#{jira_id}\n#{description}"
 
-  puts "Got #{output[:results].length} issues that we'll sync with your app"
+      priority = row.priority
+      priority_value = priority.nil? ? 99 : priority.id.to_i
+      flagged = priority_value <= 3 ? true : false
+      status = row.status.name
+      output[:results] << {
+        :task_name =>  task_name,
+        :task_notes => task_notes,
+        :status =>     status,
+        :task_flagged => flagged
+      }
 
-  # puts "\nWriting to JSON temp file"
-  file = Tempfile.new("jira-tasks")
-  file.write(JSON.generate(output))
-  file.close
+    end # report_results.each
 
-  begin
-    puts "\nRunning #{JXA_FILE}"
-    things_jxa = File.join(File.dirname(__FILE__), 'backends', JXA_FILE)
+    puts "Got #{output[:results].length} issues that we'll sync with your app"
 
-    output = `#{things_jxa} #{file.path}`
-    output.split("\n").each do |line|
-      puts "[parent] output: #{line}"
+    # puts "\nWriting to JSON temp file"
+    file = Tempfile.new("jira-tasks")
+    file.write(JSON.generate(output))
+    file.close
+
+    begin
+      puts "\nRunning #{JXA_FILE}"
+      things_jxa = File.join(File.dirname(__FILE__), 'backends', JXA_FILE)
+
+      output = `#{things_jxa} #{file.path}`
+      output.split("\n").each do |line|
+        puts "[parent] output: #{line}"
+      end
+    rescue => e
+      puts "Error - #{e.message}"
     end
-  rescue => e
-    puts "Error - #{e.message}"
+
+    file.unlink
   end
-
-  file.unlink
-
 
 end

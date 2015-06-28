@@ -23,4 +23,4 @@ CONFIG_STORE_OPTIONS = {
     ConfigStore::Param.new("project_name", "Project Name:", "Work")
   ]
 }
-main if $0 == __FILE__
+JiraToJxaApp.new.main if $0 == __FILE__

@@ -28,7 +28,7 @@ This shows the setup for [Things](https://culturedcode.com/things/). They all wo
 
 Some projects may ask slightly different questions.
 
-You may need to use rvm to install a newer ruby. I use 2.1.5, and it's what's specified in the Gemfile.
+You may need to use [rvm](https://rvm.io/rvm/install) to install a newer ruby. I use 2.1.5, and it's what's specified in the Gemfile.
 
 The first time you run it, it looks like this:
 
@@ -98,6 +98,14 @@ hours (use `crontab -e` in Terminal for this):
     */10 7-18 * * * /yourdir/jira-to-things > /yourdir/log/jira_to_omnifocus.log 2>&1
 
 Congratulations!  You are done.
+
+## Multiple Profiles
+
+Say you have two or three filters you'd like to get imported with different settings (maybe subprojects, different contexts for different JIRAs, etc). For this you can use multiple profiles. Simply pass the `--config-file` option to set up a new yml file. For example:
+
+  $ ./jira-to-things --config-file=myopensourceproject.yml
+  Config: myopensourceproject.yml
+  JIRA Url (usually https://yourdomain.atlassian.net):
 
 
 ### Security Warning
