@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-# Which backend to use (Things in this case)
+# Which backend to use (Omnifocus in this case)
 JXA_FILE = "add_to_omnifocus.jxa"
 require File.join(File.dirname(__FILE__), 'lib/task_sources/jira/jira_to_jxa_app')
 
