@@ -165,7 +165,7 @@ class JiraToJxaApp
 
     begin
       puts "\nRunning #{JXA_FILE}"
-      things_jxa = File.join(File.dirname(__FILE__), 'task_destinations', JXA_FILE)
+      things_jxa = File.join(File.dirname(__FILE__), '../../task_destinations', JXA_FILE)
 
       output = `#{things_jxa} #{file.path}`
       output.split("\n").each do |line|
