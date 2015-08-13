@@ -75,7 +75,7 @@ function run(input, params) {
 		}
 	}
 
-	console.log("Finished updating "+report_json['results'].length+" tasks in Things.")
+	console.log("Finished updating "+report_json['results'].length+" tasks in Omnifocus.")
 
 }
 
