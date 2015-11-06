@@ -68,6 +68,14 @@ After this, every time you run it it looks like this:
 	Running add_to_things.jxa
 	Finished updating 999 tasks in Things.
 
+## Some Useful Queries
+
+The default query should show everything assigned to you, open or not (we need to know when it's closed to mark it done). But sometimes this could be a lot of stuff and overwhelm you. So here's other possibilities:
+
+	assignee = currentUser() and (sprint in openSprints()) order by priority desc
+
+This query will show whatever you have assigned to any current sprints. If your workflow has your issues moving naturally to the next sprint after the first one, this should work well.
+
 ## Troubleshooting
 
 ### Can't get object on (JXA file)
