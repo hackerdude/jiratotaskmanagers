@@ -21,7 +21,7 @@ function run(input, params) {
 
 	var strPath = input[0]
 	if (VERBOSE) { 	console.log("Path:"+strPath) }
-	var nsjira_report = $.NSString.stringWithContentsOfFile(strPath)
+	var nsjira_report = $.NSString.stringWithContentsOfFileEncodingError(strPath,$.NSUTF8StringEncoding,null)
 	var jira_report = ObjC.unwrap(nsjira_report)
 	var report_json = JSON.parse(jira_report)
 
