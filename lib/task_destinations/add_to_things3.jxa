@@ -1,0 +1,77 @@
+#!/usr/bin/env osascript -l JavaScript
+/*
+  Copyright 2009, David Martinez
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+const VERBOSE = false
+
+function run(input, params) {
+	'use strict';
+
+	var strPath = input[0]
+	if (VERBOSE) { 	console.log("Path:"+strPath) }
+	var nsjira_report = $.NSString.stringWithContentsOfFileEncodingError(strPath,$.NSUTF8StringEncoding,null)
+	var jira_report = ObjC.unwrap(nsjira_report)
+	var report_json = JSON.parse(jira_report)
+
+	var completed_stati = report_json['completed_stati']
+	if (VERBOSE) { console.log("Completed stati:"+completed_stati) }
+  var app_params     = report_json['task_app_params']
+	var target_project = app_params['project_name']
+  var tag_names      = app_params['tags']
+
+	var TaskApp = Application("Things3")
+	TaskApp.includeStandardAdditions = true
+	if (VERBOSE) { 	console.log("Setting target project: "+target_project) }
+	var things_project = TaskApp.projects.byName(target_project)
+	things_project.name() // To force an exception that we can see.
+	if (VERBOSE) { console.log("Setting target project: "+things_project.name()) }
+
+	var things_tasks = TaskApp.toDos
+
+	for (var i = report_json['results'].length - 1; i >= 0; i--) {
+		var row = report_json['results'][i]
+		var task_name = row['task_name']
+		var task_notes = row['task_notes']
+		var task_status     = row['status']
+		var task_flags = row['task_flags']
+		if (VERBOSE) { console.log("Task: "+task_name) }
+		var things_task = things_tasks.byName(task_name)
+		try {
+			var things_name = things_task.name()
+			if (VERBOSE) { console.log("Found task: and it's " + things_task.status() + ". Setting status to " + task_status) }
+      things_task.tagNames = tag_names
+			if (completed_stati.indexOf(task_status) > 0) {
+				if (VERBOSE) { console.log("Marking Done") }
+                things_task.status = 'completed'
+			}
+		} catch (err) {
+			if (VERBOSE) { console.log("No task Found. "+err.message+". Adding it..") }
+			var toDo = TaskApp.ToDo({
+        name: task_name,
+        notes: task_notes,
+        project: things_project,
+        tagNames: tag_names,
+        status: ( completed_stati.indexOf(task_status) > 0 ? 'completed' : 'open' )
+      })
+			if (VERBOSE) { console.log("New TaskApp ToDo:"+toDo) }
+			TaskApp.toDos.push(toDo)
+			// Not found, keep going.
+		}
+	}
+
+	console.log("Finished updating "+report_json['results'].length+" tasks in Things.")
+
+}
+
