@@ -7,7 +7,7 @@ Requires Yosemite because it uses JXA for ease of scripting.
 Currently supported Task Apps:
 
 - [Omnifocus 1 & 2](https://www.omnigroup.com/omnifocus)
-- [Things 2](https://culturedcode.com/things/)
+- [Things 2 & 3](https://culturedcode.com/things/)
 - [Apple Reminders](https://help.apple.com/reminders/mac/10.10/index.html?localePath=en.lproj#/remn37e1b56e)
 
 ## Why?
@@ -24,7 +24,7 @@ If you're a coder, and you use a different (scriptable) task manager on your Mac
 
 ## Setting Up
 
-This shows the setup for [Things](https://culturedcode.com/things/). They all work the same, just run the jira-to-(yourapp) instead.
+This shows the setup for [Things 2](https://culturedcode.com/things/). They all work the same, just run the jira-to-(yourapp) instead.
 
 Some projects may ask slightly different questions.
 
