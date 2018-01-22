@@ -75,7 +75,7 @@ function run(input, params) {
 		}
 	}
 
-	console.log("Finished updating "+report_json['results'].length+" tasks in Omnifocus.")
+	console.log("Finished updating "+report_json['results'].length+" tasks in Omnifocus 2.")
 
 }
 
