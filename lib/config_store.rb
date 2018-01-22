@@ -1,5 +1,6 @@
 require 'crypt/blowfish'
 require 'crypt/cbc'
+require 'fileutils'
 
 # Encrypted config store
 class ConfigStore

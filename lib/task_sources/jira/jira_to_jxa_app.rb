@@ -24,6 +24,7 @@ require 'getoptlong'
 require 'yaml'
 require 'jira'
 require 'json'
+require 'tempfile'
 require File.join(File.dirname(__FILE__), '../../config_store')
 
 class JiraToJxaApp
