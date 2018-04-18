@@ -22,7 +22,7 @@ JIRA_MAX_RESULTS = 100
 require 'rubygems'
 require 'getoptlong'
 require 'yaml'
-require 'jira'
+require 'jira-ruby'
 require 'json'
 require 'tempfile'
 require File.join(File.dirname(__FILE__), '../../config_store')
