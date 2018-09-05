@@ -34,11 +34,11 @@ function run(input, params) {
 	TaskApp.includeStandardAdditions = true
   var omnifocus_doc = TaskApp.documents.first()
 	if (VERBOSE) { 	console.log("Setting target project: "+target_project) }
-	var taskapp_project = omnifocus_doc.projects.byName(target_project)
+	var taskapp_project = omnifocus_doc.flattenedProjects.byName(target_project)
 	taskapp_project.name() // To force an exception that we can see.
 
 	var target_context = app_params['context']
-  var taskapp_context = omnifocus_doc.contexts.byName(target_context)
+  var taskapp_context = omnifocus_doc.flattenedContexts.byName(target_context)
 	if (VERBOSE) { 	console.log("Setting target context: "+target_context) }
   taskapp_context.name()
 
