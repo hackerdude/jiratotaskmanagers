@@ -40,27 +40,54 @@ class ConfigStore
     end
   end
 
-  def read_from_stdin
-    print "JIRA Url (usually https://yourdomain.atlassian.net):"
-    $stdout.flush
-    @jira_url=STDIN.gets.chomp!
+  # TODO This probably does not belong here.
+  def create_jira_connection
+    @connection ||= JIRA::Client.new({
+      :username => @username,
+      :password => @password,
+      :site     => @jira_url,
+      :context_path => '',
+      :auth_type => :basic,
+      :use_ssl => true
+    })
+  end
 
-    print "JIRA Query ([Enter] for #{DEFAULT_JIRA_QUERY} ): "
+  def test_jira_connection
+     jira_client = create_jira_connection
+     jira_client.Issue.jql(jira_query, {:max_results=>1})
+  end
+
+  def ask_question(question, default='', hide_question=false)
+    print question
     $stdout.flush
-    @jira_query=STDIN.gets.chomp!
-    if @jira_query == ''
-      @jira_query = DEFAULT_JIRA_QUERY
+    system "stty -echo" if hide_question
+    result = answered = STDIN.gets.chomp!
+    if ! answered || answered == ''
+      result = default || ''
     end
+    system "stty echo" if hide_question
+    result
+  end
 
-    print "JIRA User name: "
-    $stdout.flush
-    @username=STDIN.gets.chomp!
+  def read_from_stdin
+    @connection_ok = false
+    while (! @connection_ok)      
+      @jira_url = ask_question("JIRA Url (usually https://yourdomain.atlassian.net):", @jira_url)
+      @jira_query = ask_question("JIRA Query ([Enter] for #{DEFAULT_JIRA_QUERY} ): ", @jira_query || DEFAULT_JIRA_QUERY)
 
-    print "JIRA Password: "
-    $stdout.flush
-    system "stty -echo"
-    @password=STDIN.gets.chomp!
-    system "stty echo"
+
+      @username = ask_question("JIRA Username:", @username)
+      @password=  ask_question("JIRA Password: ", @password, true)
+
+      print "Testing JIRA connection.. "
+      begin
+        test_jira_connection
+      rescue => e
+        puts "\nJIRA Connection failed (#{e.message}).
+        \nPlease answer the questions again.
+        \nPressing [Enter] keeps your previous answers."
+      end
+    end
 
     puts "\n\n** Task App Config"
 

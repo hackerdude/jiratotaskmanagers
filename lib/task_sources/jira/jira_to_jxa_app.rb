@@ -26,6 +26,9 @@ require 'jira-ruby'
 require 'json'
 require 'tempfile'
 require File.join(File.dirname(__FILE__), '../../config_store')
+if ENV['DEBUG']
+  require 'byebug'
+end
 
 class JiraToJxaApp
 
@@ -100,13 +103,8 @@ class JiraToJxaApp
     end
     config_store = ConfigStore.new(CONFIG_STORE_OPTIONS)
     # Connect to JIRA
-    jira_client = JIRA::Client.new({
-                  :username => config_store.username,
-                  :password => config_store.password,
-                  :site     => config_store.jira_url,
-                  :context_path => '',
-                  :auth_type => :basic
-    })
+    byebug
+    jira_client = config_store.create_jira_connection
 
     # Get issues from saved filter
     puts "Running JQL:"
