@@ -32,13 +32,13 @@ function run(input, params) {
   var taskapp_name   = app_params['app_name']
 	var TaskApp = Application(taskapp_name)
 	TaskApp.includeStandardAdditions = true
-  var omnifocus_doc = TaskApp.documents.first()
+  var omnifocus_doc = TaskApp.defaultDocument
 	if (VERBOSE) { 	console.log("Setting target project: "+target_project) }
-	var taskapp_project = omnifocus_doc.projects.byName(target_project)
+	var taskapp_project = omnifocus_doc.flattenedProjects.whose({name: target_project})[0]
 	taskapp_project.name() // To force an exception that we can see.
 
 	var target_context = app_params['context']
-  var taskapp_context = omnifocus_doc.contexts.byName(target_context)
+  var taskapp_context = omnifocus_doc.flattenedContexts.whose({name: target_context})[0]
 	if (VERBOSE) { 	console.log("Setting target context: "+target_context) }
   taskapp_context.name()
 
@@ -53,25 +53,28 @@ function run(input, params) {
 		var task_status     = row['status']
 		var task_flags = row['task_flags']
 		if (VERBOSE) { console.log("Task: "+task_name) }
-		var omnifocus_task = taskapp_project.tasks.byName(task_name)
+		var omnifocus_task = omnifocus_doc.flattenedTasks.whose({name: task_name})[0]
 		try {
-  		if (VERBOSE) { console.log("omnifocus_task: "+omnifocus_task) }
-			var things_name = omnifocus_task.name()
-			if (VERBOSE) { console.log("Found task: and it's completed?"+omnifocus_task.completed()+". Setting status to "+task_status) }
-			if (completed_stati.indexOf(task_status)) {
-				if (VERBOSE) { console.log("Marking Done") }
-				omnifocus_task.completed = true
-			}
+	  		if (VERBOSE) { console.log("omnifocus_task: "+omnifocus_task.name()) }
+				var things_name = omnifocus_task.name()
+				if (VERBOSE) { console.log("Found task: and it's completed?"+omnifocus_task.completed()+". Setting status to "+task_status) }
+				if (completed_stati.indexOf(task_status) > 0) {
+					if (VERBOSE) { console.log("Marking Done") }
+					omnifocus_task.markComplete()
+				}
 		} catch (err) {
 			if (VERBOSE) { console.log("No task Found. "+err.message+". Adding it to "+taskapp_project.name()+"@"+taskapp_context.name()) }
 			var toDo = TaskApp.Task({name: task_name, note: task_notes, context: taskapp_context})
 			if (VERBOSE) { console.log("New TaskApp ToDo:"+toDo) }
-      try {
-  			taskapp_project.tasks.push(toDo)
-      } catch(e) {
-        // TODO AppleEvent Handler failed on OF 1
-      }
-			// Not found, keep going.
+			try {
+				taskapp_project.tasks.push(toDo)
+				if (completed_stati.indexOf(task_status) > 0) {
+					if (VERBOSE) { console.log("Marking new task Done") }
+					toDo.markComplete()
+				}
+			} catch(e) {
+				// TODO AppleEvent Handler failed on OF 1
+			}
 		}
 	}
 
