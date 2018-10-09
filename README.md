@@ -44,7 +44,7 @@ The first time you run it, it looks like this:
 	    (If you don't know JQL, blank should be fine)
 	Project Name on your Mac's To Do App:
 	    (type the Project name in your Mac's TODO app)
-	User name:
+  User name:
 	    (your JIRA user name.
 			Note: If you use OAuth, you still have a user name mapping,
 			it's in your profile view)
@@ -67,6 +67,18 @@ After this, every time you run it it looks like this:
 
 	Running add_to_things.jxa
 	Finished updating 999 tasks in Things.
+
+## Other ways to authenticate
+
+You can use API tokens. Atlassian token generation
+is at https://id.atlassian.com/manage/api-tokens - when asked for your
+password, send the token instead.
+
+Note the token/passwords are encrypted in the YAML, so if you don't have a
+plaintext version, --clear-config will wipe out the only copy. So keep
+that in mind and use 1Password or something to keep a copy of it.
+
+You can go to (https://confluence.atlassian.com/cloud/api-tokens-938839638.html "API Tokens Documentation") for more details.
 
 ## Some Useful Queries
 
@@ -93,7 +105,7 @@ Once you've determined what was wrong, `--clear-config` option to reconfigure, a
 /Users/David/.rvm/gems/ruby-2.1.5/gems/jira-ruby-0.1.14/lib/jira/request_client.rb:14:in `request': Unauthorized (JIRA::HTTPError)
 ``
 
-This is a JIRA authentication error. We use JIRA basic auth. Clear your config and log in correctly.
+This is a JIRA authentication error. We use JIRA basic auth or API tokens. Clear your config and log in correctly.
 
 Note that if you have never signed in to JIRA using a password (for example, if you use Google Apps login), you need to go to your profile, look at the username and click on "Set Password" to set an initial password. Make sure you can log in to JIRA directly.
 
@@ -114,7 +126,6 @@ Say you have two or three filters you'd like to get imported with different sett
   $ ./jira-to-things --config-file=myopensourceproject.yml
   Config: myopensourceproject.yml
   JIRA Url (usually https://yourdomain.atlassian.net):
-
 
 ### Security Warning
 

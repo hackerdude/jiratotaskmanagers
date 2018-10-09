@@ -1,0 +1,166 @@
+#!/usr/bin/env osascript -l JavaScript
+/*
+  Copyright 2009, David Martinez
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+*/
+const VERBOSE = false
+
+/** Given an Omnifocus Document, gets or creates the Project */
+function upsertProject(app, doc, projectName) {
+  var matching_projects = doc.flattenedProjects.whose({name: projectName})
+  var taskapp_project = matching_projects.length == 0 ? null : matching_projects[0]
+  if (taskapp_project) {
+    return taskapp_project
+  } else {
+    console.log(`WARNING - Cannot find project ${projectName}. Creating it..`)
+    try {
+      taskapp_project = app.Project({
+        name: projectName, status: 'active'
+      })
+      // TODO execution error: Error on line 44: Error: Can't get object. (-1728)
+      doc.projects.push(taskapp_project)
+    } catch (e) {
+      // TODO AppleEvent Handler failed, but it does it.
+      if (VERBOSE) {console.log(`Error while adding project: ${e.message}. Will try to continue`)}
+    }
+  }
+  taskapp_project.name()
+  return taskapp_project
+}
+
+/* Given an omnifocus Tag, gets or creates the Tag */
+function upsertTag(app, doc, tagName) {
+  var taskapp_tags = doc.flattenedTags.whose({name: tagName})
+  var taskapp_tag = null
+  if (VERBOSE) { 	console.log(`Tags with that name: ${taskapp_tags.length}`) }
+  if (taskapp_tags.length > 0) {
+    taskapp_tag = taskapp_tags[0]
+  } else {
+    try {
+      taskapp_tag = app.Tag({name: tagName})
+      taskapp_tag = doc.tags.push(taskapp_tag)
+    } catch (e) {
+      // TODO AppleEvent Handler failed, but it does it.
+      if (VERBOSE) {console.log(`Error while adding tags: ${e.message}. Will try to continue`)}
+    }
+  }
+  if (VERBOSE) { 	console.log(`Target Tag will be: ${taskapp_tag.name()}`) }
+  return taskapp_tag
+}
+
+function upsertTask(app, doc, taskapp_project, task_name, taskProperties, allTags, isCompleted) {
+  if (VERBOSE) { console.log(`Looking for ${task_name}..`)}
+  let foundTasks = doc.flattenedTasks.whose({name: task_name})
+  let ofTask = foundTasks.length > 0 ? foundTasks[0] : null
+  if (ofTask) {
+    if (VERBOSE) { console.log("omnifocus_task: "+ofTask.name()) }
+    if (VERBOSE) { console.log("Found task: and it's completed?"+ofTask.completed()+". Setting completion to "+isCompleted) }
+    if (isCompleted) {
+      ofTask.markComplete()
+    }
+  } else {
+    if (VERBOSE) {
+      console.log("No task Found. Adding it to "+taskapp_project.name()+"@"+allTags[0].name())
+    }
+    ofTask = app.Task(taskProperties)
+    try {
+      taskapp_project.tasks.push(ofTask)
+      if (isCompleted) {
+        if (VERBOSE) { console.log("Marking new task Done") }
+        ofTask.markComplete()
+      }
+    } catch(e) {
+      // TODO AppleEvent Handler failed, but it does it.
+      if (VERBOSE) {console.log(`Error while adding task: ${e.message}. Will try to continue`)}
+    }
+  } // if ofTask
+  for (var i=0; i<allTags.length; i++) {
+    try {
+      var curTag = allTags[i]
+      if (VERBOSE) {console.log(`Pushing ${curTag.name()}`)}
+      // curTag.tasks.push(ofTask)
+      // ofTask.tags.push(curTag)
+      doc.add(ofTask, curTag)
+    } catch (e) {
+      // TODO AppleEventHandler Failed. This one does *not* work. Oy.
+      if (VERBOSE) { console.log(`Error while setting tag ${curTag.name()} on task: ${e.message}. Will try to continue`) }
+    }
+  }
+}
+
+function run(input, params) {
+  'use strict';
+
+  var strPath = input[0]
+  if (VERBOSE) { 	console.log("Path:"+strPath) }
+  var nsjira_report = $.NSString.stringWithContentsOfFile(strPath)
+  var jira_report = ObjC.unwrap(nsjira_report)
+  var report_json = JSON.parse(jira_report)
+
+  var completed_stati = report_json['completed_stati']
+  if (VERBOSE) { console.log("Completed stati:"+completed_stati) }
+  var app_params     = report_json['task_app_params']
+  var target_project = app_params['project_name']
+  var taskapp_name   = app_params['app_name']
+  var TaskApp = Application(taskapp_name)
+  TaskApp.includeStandardAdditions = true
+  var omnifocus_doc = TaskApp.defaultDocument
+  if (VERBOSE) { console.log(`Omnifocus Doc: ${omnifocus_doc.name()}`) }
+  if (VERBOSE) { 	console.log("Setting target project: "+target_project) }
+
+  var taskapp_project = upsertProject(TaskApp, omnifocus_doc, target_project)
+  console.log(`Using project ${taskapp_project.name()}`)
+
+  var target_context = app_params['context'] || ''
+  if (target_context == '') {
+    target_context = 'jira'
+  } else {
+    target_context = target_context+",jira"
+  }
+  if (VERBOSE) { 	console.log("Setting target tags: "+target_context) }
+  var allTagNames = target_context.split(',')
+  var allTags = []
+  for(var i=0; i<allTagNames.length; i++) {
+    if (allTagNames[i]!='') {
+      let thisTag = upsertTag(TaskApp, omnifocus_doc, allTagNames[i])
+      thisTag.name()
+      allTags.push(thisTag)
+    }
+  }
+
+  if (VERBOSE) { console.log("Setting target project: "+taskapp_project.name()) }
+
+  var omnifocus_tasks = omnifocus_doc.tasks
+
+  for (var i = report_json['results'].length - 1; i >= 0; i--) {
+    var row = report_json['results'][i]
+    var task_name = row['task_name']
+    var task_notes = row['task_notes']
+    var task_status     = row['status']
+    var task_flags = row['task_flags']
+    if (VERBOSE) { console.log("Task: "+task_name) }
+    var task_completed = completed_stati.indexOf(task_status) > 0
+    var taskProperties = {
+      name: task_name, note: task_notes, primaryTag: allTags[0]
+    }
+    var omnifocus_task = upsertTask(TaskApp,
+      omnifocus_doc, taskapp_project, task_name,
+      taskProperties, allTags, task_completed
+    )
+  }
+
+  console.log("Finished updating "+report_json['results'].length+" tasks in Omnifocus 2.")
+
+}
+
