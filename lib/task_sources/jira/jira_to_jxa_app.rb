@@ -26,7 +26,8 @@ require 'jira-ruby'
 require 'json'
 require 'tempfile'
 require File.join(File.dirname(__FILE__), '../../config_store')
-if ENV['DEBUG']
+
+if ENV['DEBUG'] == 'true'
   require 'byebug'
 end
 
@@ -103,7 +104,6 @@ class JiraToJxaApp
     end
     config_store = ConfigStore.new(CONFIG_STORE_OPTIONS)
     # Connect to JIRA
-    byebug
     jira_client = config_store.create_jira_connection
 
     # Get issues from saved filter
@@ -158,7 +158,7 @@ class JiraToJxaApp
     puts "Got #{output[:results].length} issues that we'll sync with your app"
 
     # puts "\nWriting to JSON temp file"
-    file = Tempfile.new("jira-tasks")
+    file = config_store.debugging? ? File.new('jira-tasks.json', "w") : Tempfile.new("jira-tasks")
     file.write(JSON.generate(output))
     file.close
 
@@ -173,8 +173,11 @@ class JiraToJxaApp
     rescue => e
       puts "Error - #{e.message}"
     end
-
-    file.unlink
+    if ! ENV['DEBUG']
+      file.unlink
+    else
+      puts "Left #{file.path} so you can try to run it yourself. Command:\n#{things_jxa} #{file.path}"
+    end
   end
 
 end

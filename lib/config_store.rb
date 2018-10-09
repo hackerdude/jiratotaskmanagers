@@ -40,6 +40,10 @@ class ConfigStore
     end
   end
 
+  def debugging?
+    return ENV['DEBUG'] == 'true'
+  end
+
   # TODO This probably does not belong here.
   def create_jira_connection
     @connection ||= JIRA::Client.new({
@@ -82,6 +86,8 @@ class ConfigStore
       print "Testing JIRA connection.. "
       begin
         test_jira_connection
+        @connection_ok = true
+        puts "OK!"
       rescue => e
         puts "\nJIRA Connection failed (#{e.message}).
         \nPlease answer the questions again.
