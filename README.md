@@ -45,7 +45,7 @@ The first time you run it, it looks like this:
 	Project Name on your Mac's To Do App:
 	    (type the Project name in your Mac's TODO app)
 	User name:
-	    (your JIRA user name.
+	    (your JIRA user name [email address].
 			Note: If you use OAuth, you still have a user name mapping,
 			it's in your profile view)
 	Password:
