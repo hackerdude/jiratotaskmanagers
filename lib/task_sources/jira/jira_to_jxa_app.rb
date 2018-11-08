@@ -14,7 +14,7 @@
 
 # Change the filter id here. TODO Use by name and save it on the config.
 JIRA_TASK_RE=/(.*-[0-9]*):(.*)/
-JIRA_STATI_FOR_COMPLETED=["Resolved", "Rejected", "Closed"] # The status a completed JIRA project should have on your machine.
+JIRA_STATI_FOR_COMPLETED=["Resolved", "Rejected", "Closed", "Done"] # The status a completed JIRA project should have on your machine.
 
 # Ask for 100 items at a time (JIRA default is 50). It's not that much RAM.
 JIRA_MAX_RESULTS = 100
