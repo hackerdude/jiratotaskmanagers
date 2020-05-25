@@ -1,2 +1,8 @@
 .DS_Store
 Gemfile.lock
+getReleases.yml
+getStorys.yml
+getSubTasks.yml
+.vscode/launch.json
+getTickets.yml
+.gitignore
