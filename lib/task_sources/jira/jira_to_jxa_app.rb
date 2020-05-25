@@ -143,7 +143,12 @@ class JiraToJxaApp
       description = row.description
       task_name = "#{jira_id}: #{title}"
       task_notes = "#{config_store.jira_url}/browse/#{jira_id}\n#{description}"
-      task_deadline = row.duedate
+
+      if row.duedate.nil? then
+          task_deadline = "nodate"
+        else 
+          task_deadline = row.duedate
+        end
 
       priority = row.priority
       priority_value = priority.nil? ? 99 : priority.id.to_i

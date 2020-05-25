@@ -14,7 +14,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-const VERBOSE = true
+const VERBOSE = false
 
 function run(input, params) {
 	'use strict';
@@ -46,9 +46,16 @@ function run(input, params) {
 		var task_notes = row['task_notes']
 		var task_status = row['status']
 		var task_flags = row['task_flags']
-		// Converting task to JavaScript acceptable date
-		var task_deadline = new Date(row['task_deadline']);
-		if (VERBOSE) { console.log("Task: "+task_name) }
+		// Checking if date is set in Jira
+		if (row['task_deadline'] == "nodate") {
+			var task_deadline = false
+		} 
+		else
+		{
+			// Converting task to JavaScript acceptable date
+			var task_deadline = new Date(row['task_deadline']);
+		}
+		if (VERBOSE) { console.log("Task: " + task_name + " with date " + task_deadline) }
 		var things_task = things_tasks.byName(task_name)
 		try {
 			var things_name = things_task.name()
@@ -65,10 +72,10 @@ function run(input, params) {
 				notes: task_notes,
 				project: things_project,
 				tagNames: tag_names,
-				dueDate: task_deadline,
 				status: ( completed_stati.indexOf(task_status) > 0 ? 'completed' : 'open' )
 			})
-			if (VERBOSE) { console.log("New TaskApp ToDo:"+toDo) }
+			if (task_deadline) { toDo['dueDate'] = task_deadline }
+			if (VERBOSE) { console.log("New TaskApp ToDo: " + toDo + task_deadline) }
 			TaskApp.toDos.push(toDo)
 			// Not found, keep going.
 		}
