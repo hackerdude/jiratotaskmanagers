@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
 
+
         {
             "name": "Debug Local File",
             "type": "Ruby",
@@ -18,6 +19,15 @@
 			"program": "${workspaceRoot}/jira-to-things3",
 			"args":[
                 "--config-file=getReleases.yml"
+            ]
+        },
+        {
+            "name": "Debug addToThings3 - Storys",
+			"type": "Ruby",
+			"request": "launch",
+			"program": "${workspaceRoot}/jira-to-things3",
+			"args":[
+                "--config-file=getStorys.yml"
             ]
         },
         {

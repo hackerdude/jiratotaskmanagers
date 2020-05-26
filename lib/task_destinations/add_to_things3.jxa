@@ -14,7 +14,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
-const VERBOSE = false
+const VERBOSE = true
 
 function run(input, params) {
 	'use strict';
@@ -61,7 +61,7 @@ function run(input, params) {
 			var things_name = things_task.name()
 			if (VERBOSE) { console.log("Found task: and it's " + things_task.status() + ". Setting status to " + task_status) }
       			things_task.tagNames = tag_names
-			if (completed_stati.indexOf(task_status) > 0) {
+			if (completed_stati.indexOf(task_status) >= 0) {
 				if (VERBOSE) { console.log("Marking Done") }
                 things_task.status = 'completed'
 			}
