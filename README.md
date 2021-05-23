@@ -47,8 +47,12 @@ The first time you run it, it looks like this:
 	User name:
 	    (your JIRA user name.
 			Note: If you use OAuth, you still have a user name mapping,
-			it's in your profile view)
+			it's in your profile view or is your email address)
 	Password:
+	    (your JIRA password.
+	    		Note: If you use a managed account that doesn't allow passwords,
+			navigate to Account Seetings > Security > Create and manage API 
+			tokens. An API Token can be used in place of the password.
 	Store config? (y/n) y
 	Running JQL:
 	assignee = currentUser() order by priority desc
