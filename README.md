@@ -1,14 +1,19 @@
-# JIRA To Task Managers
+# Jira To Things3
 
-This is a project to have JIRA update AppleScript-enabled Task apps like Omnifocus and Things.
+This is a project to add tasks from Jira to [Things 3](https://culturedcode.com/things/)
 
-Requires Yosemite because it uses JXA for ease of scripting.
+Requires Yosemite because it uses JXA for ease of scripting. It is a fork of the original project [jiratotaskmanagers](https://github.com/hackerdude/) by [HackerDude](https://github.com/hackerdude)
 
-Currently supported Task Apps:
+It has the current functions:
+- Sync open Jira issues to a Things3 Project by choise
+- Reads DueDate of Jira issue and applys this to the toDo
+- Add's all new toDo's to the Today list (schedules todo's for today)
+- Supports multible query's (I have it set up to get my Tickets, Releases, Changes etc and drop them in to different lists)
 
-- [Omnifocus 1 & 2](https://www.omnigroup.com/omnifocus)
-- [Things 2 & 3](https://culturedcode.com/things/)
-- [Apple Reminders](https://help.apple.com/reminders/mac/10.10/index.html?localePath=en.lproj#/remn37e1b56e)
+Shortcommings:
+- No 2 way sync
+- No auto updating. Once a todo is added it wil not be updated. If a todo with a deadline has been added to Things3 for example and the dueDate changes this will not be reflected in Things3. You will need to delete the toDo, clear the trash and sync again.
+
 
 ## Why?
 
@@ -20,23 +25,17 @@ This I believe leads to tremendous life imbalances. Do I code now, or do I write
 
 JIRA To Task managers is a set of scripts that you can schedule on your Mac, which create one task for each of your assigned JIRA tasks. You can use cron to "set it and forget it", and get back to *One Inbox Bliss*.
 
-If you're a coder, and you use a different (scriptable) task manager on your Mac, I invite you to code a destination (see below). JXA can be fun!
-
 ## Setting Up
-
-This shows the setup for [Things 2](https://culturedcode.com/things/). They all work the same, just run the jira-to-(yourapp) instead.
-
-Some projects may ask slightly different questions.
 
 You may need to use [rvm](https://rvm.io/rvm/install) to install a newer ruby. I use 2.1.5, and it's what's specified in the Gemfile.
 
 The first time you run it, it looks like this:
-
+```
 	(maybe RVM install or something..)
 	$ bundle install
 	(installs all your gems and goodies..)
-
-	$ ./jira-to-things -C
+	
+	$ ./jira-to-things3 -C
 	Cleared login from /Users/yourname/.jiratotaskmanagers/jira_to_things.yml
 	JIRA Url (usually https://yourdomain.atlassian.net):
 	    (you type your JIRA URI)
@@ -58,16 +57,16 @@ The first time you run it, it looks like this:
 
 After this, every time you run it it looks like this:
 
-	Running add_to_things.jxa
+	Running add_to_things3.jxa
 	Finished updating 50 tasks in Things.
 	$ ./jira-to-things
 	Running JQL:
 	assignee = currentUser() order by priority desc
 	Got 999 issues that we'll sync with your app
-
+	
 	Running add_to_things.jxa
 	Finished updating 999 tasks in Things.
-
+```
 ## Some Useful Queries
 
 The default query should show everything assigned to you, open or not (we need to know when it's closed to mark it done). But sometimes this could be a lot of stuff and overwhelm you. So here's other possibilities:
@@ -102,14 +101,14 @@ Note that if you have never signed in to JIRA using a password (for example, if 
 
 You are set up! Now you can put it on a cron line, like this one which sets it to run at office
 hours (use `crontab -e` in Terminal for this):
-
-    */10 7-18 * * * /yourdir/jira-to-things > /yourdir/log/jira_to_omnifocus.log 2>&1
-
+```bash
+*/10 7-18 * * * /PATH_TO_GIT/jira-to-things3 > /yourdir/log/jira_to_omnifocus.log 2>&1
+```
 Congratulations!  You are done.
 
 ## Multiple Profiles
 
-Say you have two or three filters you'd like to get imported with different settings (maybe subprojects, different contexts for different JIRAs, etc). For this you can use multiple profiles. Simply pass the `--config-file` option to set up a new yml file. For example:
+Say you have two or three filters you'd like to get imported with different settings (maybe sub-projects, different contexts for different JIRAs, etc). For this you can use multiple profiles. Simply pass the `--config-file` option to set up a new yml file. For example:
 
   $ ./jira-to-things --config-file=myopensourceproject.yml
   Config: myopensourceproject.yml
@@ -125,29 +124,15 @@ As long as both your credentials file are secured as (chmod 700) and owned by th
 
 If this bothers you, you can set the environment variable `JIRA_TO_TASKS_CRYPT_KEY` to have the configuration store use a different key. You will need to run -C to clear the config that uses the old key.
 
-## How to add New Destinations
-
-So you have Super-Duper app and you want to add support for it? With JXA, this is now fairly simple to do. JXA is just like JavaScript, and you have our template here.
-
-1. Copy `lib/task_destinations/add_to_things`.jxa and edit it.
-
-	Start by changing TaskApp = Application("Things") to match the app you want to work with. Use Applescript Editor (or Textmate with [AppleScript JXA Bundle](https://github.com/hackerdude/AppleScript-JXA.tmbundle)) and a sample JSON file, or just finish the rest of the changes and do trial-and-error with your own app.
-1. Copy `jira-to-things` to jira-to-(yourapp)
-1. change the `JXA_FILE` constant to point to your jxa file, and the `CONFIG_STORE_OPTIONS` to point to the config file you want to keep.
-1. If you need extra configuration ("contexts, tags, oh my!"), add `ConfigStore::Param` entries to the `task_app_params` array (as you test, use -C to clear the config whenever you change it)
-
-Try it out and you're done! Send me a pull request and I'll accept it.
-
-
 ## License
     Copyright 2009, David Martinez
-
+    
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-
+    
        http://www.apache.org/licenses/LICENSE-2.0
-
+    
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
