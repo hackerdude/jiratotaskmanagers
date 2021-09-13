@@ -27,9 +27,9 @@ function run(input, params) {
 
 	var completed_stati = report_json['completed_stati']
 	if (VERBOSE) { console.log("Completed stati:"+completed_stati) }
-  	var app_params     = report_json['task_app_params']
+  var app_params     = report_json['task_app_params']
 	var target_project = app_params['project_name']
-  	var tag_names      = app_params['tags']
+  var tag_names      = app_params['tags']
 
 	var TaskApp = Application("Things3")
 	TaskApp.includeStandardAdditions = true
@@ -74,11 +74,21 @@ function run(input, params) {
 				tagNames: tag_names,
 				status: ( completed_stati.indexOf(task_status) > 0 ? 'completed' : 'open' )
 			})
+			// Check if the Jira ticket has a deadline
 			if (task_deadline) { toDo['dueDate'] = task_deadline }
-			if (VERBOSE) { console.log("New TaskApp ToDo: " + toDo + task_deadline) }
+			if (VERBOSE) { console.log("New TaskApp ToDo: " + toDo.name + " in project: " + things_project.name() + " with due date: " + task_deadline) }
 			TaskApp.toDos.push(toDo)
+
+			// Setting the todo for today
+			console.log("Scheduling the task for today")
+			var today = new Date()
+			var TaskProject = TaskApp.projects[things_project.name()]
+			var projectTodos = TaskProject.toDos
+
+			TaskApp.schedule(projectTodos[task_name], {for: today})
+			}
+
 			// Not found, keep going.
-		}
 	}
 
 	console.log("Finished updating "+report_json['results'].length+" tasks in Things.")
