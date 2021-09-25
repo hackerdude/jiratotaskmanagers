@@ -14,7 +14,7 @@
 
 # Change the filter id here. TODO Use by name and save it on the config.
 JIRA_TASK_RE=/(.*-[0-9]*):(.*)/
-JIRA_STATI_FOR_COMPLETED=["Resolved", "Rejected", "Closed"] # The status a completed JIRA project should have on your machine.
+JIRA_STATI_FOR_COMPLETED=["Resolved", "Rejected", "Closed", "Done", "Released"] # The status a completed JIRA project should have on your machine.
 
 # Ask for 100 items at a time (JIRA default is 50). It's not that much RAM.
 JIRA_MAX_RESULTS = 100
@@ -144,6 +144,12 @@ class JiraToJxaApp
       task_name = "#{jira_id}: #{title}"
       task_notes = "#{config_store.jira_url}/browse/#{jira_id}\n#{description}"
 
+      if row.duedate.nil? then
+          task_deadline = "nodate"
+        else 
+          task_deadline = row.duedate
+        end
+
       priority = row.priority
       priority_value = priority.nil? ? 99 : priority.id.to_i
       flagged = priority_value <= 3 ? true : false
@@ -152,7 +158,8 @@ class JiraToJxaApp
         :task_name =>  task_name,
         :task_notes => task_notes,
         :status =>     status,
-        :task_flagged => flagged
+        :task_flagged => flagged,
+        :task_deadline => task_deadline
       }
 
     end # report_results.each
